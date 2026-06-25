@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>検索 — Dasopedia</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3e;
+      --accent: #6c8bef; --accent-hover: #8aa3f5;
+      --text: #e8eaf0; --text-muted: #7b7f96;
+      --font: 'Inter', 'Hiragino Sans', sans-serif;
+    }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); }
+    nav {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px; height: 56px; position: sticky; top: 0; z-index: 100;
+    }
+    .nav-logo { font-size: 16px; font-weight: 700; color: var(--text); text-decoration: none; }
+    .nav-logo span { color: var(--accent); }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .nav-link { color: var(--text-muted); font-size: 13px; text-decoration: none; }
+    .nav-link:hover { color: var(--text); }
+    .main { max-width: 860px; margin: 0 auto; padding: 40px 24px; }
+    h1 { font-size: 24px; font-weight: 700; margin-bottom: 28px; letter-spacing: -0.02em; }
+    .search-box {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 24px; margin-bottom: 20px;
+    }
+    .search-row { display: flex; gap: 10px; margin-bottom: 16px; }
+    .search-input {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: var(--font); font-size: 14px;
+      padding: 11px 14px; outline: none; flex: 1; transition: border-color 0.15s;
+    }
+    .search-input:focus { border-color: var(--accent); }
+    .btn-search {
+      background: var(--accent); border: none; border-radius: 8px; color: #fff;
+      cursor: pointer; font-family: var(--font); font-size: 14px; font-weight: 600;
+      padding: 11px 20px; transition: background 0.15s; white-space: nowrap;
+    }
+    .btn-search:hover { background: var(--accent-hover); }
+    .detail-toggle { color: var(--accent); font-size: 13px; cursor: pointer; background: none; border: none; font-family: var(--font); padding: 0; }
+    .detail-fields { display: none; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+    .detail-fields.open { display: grid; }
+    .field-group { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+    .result-count { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
+    .result-grid { display: grid; gap: 10px; }
+    .result-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 18px 22px; text-decoration: none; color: var(--text);
+      transition: border-color 0.15s; display: flex; justify-content: space-between; align-items: center;
+    }
+    .result-card:hover { border-color: var(--accent); }
+    .result-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .result-excerpt { font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 6px; }
+    .result-meta { font-size: 12px; color: var(--text-muted); }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .tag { background: rgba(108,139,239,0.12); border: 1px solid rgba(108,139,239,0.25); border-radius: 4px; color: var(--accent); font-size: 11px; font-weight: 600; padding: 2px 8px; }
+    .arrow { color: var(--text-muted); font-size: 18px; flex-shrink: 0; margin-left: 16px; }
+    .empty { color: var(--text-muted); font-size: 14px; text-align: center; padding: 48px; }
+    mark { background: rgba(108,139,239,0.25); color: var(--text); border-radius: 2px; padding: 0 2px; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="nav-logo" href="/"><span>D</span>asopedia</a>
+    <div class="nav-right">
+      <a class="nav-link" href="/">ホーム</a>
+      <a class="nav-link" href="/wiki/">記事一覧</a>
+      <a class="nav-link" href="#" onclick="doLogout()">ログアウト</a>
+    </div>
+  </nav>
+
+  <div class="main">
+    <h1>検索</h1>
+    <div class="search-box">
+      <div class="search-row">
+        <input class="search-input" id="q" type="search" placeholder="キーワードを入力..." onkeydown="if(event.key==='Enter')doSearch()">
+        <button class="btn-search" onclick="doSearch()">検索</button>
+      </div>
+      <button class="detail-toggle" onclick="toggleDetail()">▸ 詳細検索</button>
+      <div class="detail-fields" id="detail-fields">
+        <div class="field-group">
+          <label>作成者</label>
+          <input class="search-input" id="f-author" placeholder="表示名で絞り込み">
+        </div>
+        <div class="field-group">
+          <label>タグ</label>
+          <input class="search-input" id="f-tag" placeholder="タグ名">
+        </div>
+        <div class="field-group">
+          <label>作成日（から）</label>
+          <input class="search-input" id="f-from" type="date">
+        </div>
+        <div class="field-group">
+          <label>作成日（まで）</label>
+          <input class="search-input" id="f-to" type="date">
+        </div>
+      </div>
+    </div>
+    <div class="result-count" id="result-count"></div>
+    <div class="result-grid" id="result-grid"></div>
+  </div>
+
+  <script type="module">
+    import { requireAuth, logout } from '../js/auth.js';
+    import { db } from '../js/firebase.js';
+    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    window.doLogout = logout;
+    let allArticles = [];
+    let detailOpen = false;
+
+    window.toggleDetail = function() {
+      detailOpen = !detailOpen;
+      document.getElementById('detail-fields').classList.toggle('open', detailOpen);
+      document.querySelector('.detail-toggle').textContent = (detailOpen ? '▾' : '▸') + ' 詳細検索';
+    };
+
+    function highlight(text, kw) {
+      if (!kw) return text;
+      return text.replace(new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), m => `<mark>${m}</mark>`);
+    }
+
+    function excerpt(text, kw, len = 100) {
+      if (!kw || !text) return text?.slice(0, len) + (text?.length > len ? '...' : '');
+      const idx = text.toLowerCase().indexOf(kw.toLowerCase());
+      if (idx === -1) return text.slice(0, len) + (text.length > len ? '...' : '');
+      const start = Math.max(0, idx - 40);
+      const chunk = text.slice(start, start + len);
+      return (start > 0 ? '...' : '') + chunk + (start + len < text.length ? '...' : '');
+    }
+
+    window.doSearch = function() {
+      const kw     = document.getElementById('q').value.trim();
+      const author = document.getElementById('f-author').value.trim().toLowerCase();
+      const tag    = document.getElementById('f-tag').value.trim().toLowerCase();
+      const from   = document.getElementById('f-from').value ? new Date(document.getElementById('f-from').value) : null;
+      const to     = document.getElementById('f-to').value   ? new Date(document.getElementById('f-to').value + 'T23:59:59') : null;
+
+      const results = allArticles.filter(a => {
+        if (kw && !a.title.toLowerCase().includes(kw.toLowerCase()) && !(a.contentText || '').toLowerCase().includes(kw.toLowerCase())) return false;
+        if (author && !(a.createdByName || '').toLowerCase().includes(author)) return false;
+        if (tag && !(a.tags || []).some(t => t.toLowerCase().includes(tag))) return false;
+        if (from && a.createdAt && a.createdAt.toDate() < from) return false;
+        if (to   && a.createdAt && a.createdAt.toDate() > to) return false;
+        return true;
+      });
+
+      const grid = document.getElementById('result-grid');
+      document.getElementById('result-count').textContent = `${results.length} 件`;
+
+      if (results.length === 0) { grid.innerHTML = '<div class="empty">条件に一致する記事がありません。</div>'; return; }
+      grid.innerHTML = results.map(a => {
+        const date = a.updatedAt ? new Date(a.updatedAt.toMillis()).toLocaleDateString('ja-JP') : '';
+        const tagsHtml = (a.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
+        const ex = highlight(excerpt(a.contentText, kw), kw);
+        return `<a class="result-card" href="/wiki/${encodeURIComponent(a.slug || a.id)}">
+          <div>
+            <div class="result-title">${highlight(a.title, kw)}</div>
+            ${ex ? `<div class="result-excerpt">${ex}</div>` : ''}
+            <div class="result-meta">${a.createdByName || '不明'} · ${date}</div>
+            ${tagsHtml ? `<div class="tags">${tagsHtml}</div>` : ''}
+          </div>
+          <div class="arrow">›</div>
+        </a>`;
+      }).join('');
+    };
+
+    requireAuth(async () => {
+      const params = new URLSearchParams(location.search);
+      const initQ = params.get('q') || '';
+      if (initQ) document.getElementById('q').value = initQ;
+
+      const snap = await getDocs(collection(db, 'articles'));
+      allArticles = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (initQ) window.doSearch();
+    });
+  </script>
+</body>
+</html>

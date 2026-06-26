@@ -7,22 +7,21 @@ const LOGIN_URL = 'https://login.dasopedia.f5.si';
 export async function requireAuth(callback) {
   onAuthStateChanged(auth, async (user) => {
     if (!user) { window.location.href = LOGIN_URL; return; }
-    try {
-      const snap = await get(ref(rtdb, `users/${user.uid}`));
-      const userData = snap.exists() ? snap.val() : { role: 'viewer' };
-      if (userData.role === 'banned') { window.location.href = LOGIN_URL; return; }
-      if (callback) callback(user, userData);
-    } catch (e) {
-      console.error('RTDB read error:', e);
-      // RTDBが読めなくてもログイン済みなら通す
-      if (callback) callback(user, { role: 'viewer' });
-    }
+    const snap = await get(ref(rtdb, `users/${user.uid}`));
+    const userData = snap.exists() ? snap.val() : { role: 'viewer' };
+    if (userData.role === 'banned') { window.location.href = LOGIN_URL; return; }
+    if (callback) callback(user, userData);
   });
 }
 
 export async function logout() {
-  await signOut(auth);
-  window.location.href = LOGIN_URL;
+  try {
+    await signOut(auth);
+  } catch (e) {
+    console.error('logout error:', e);
+  }
+  // signOut完了後に少し待ってからリダイレクト
+  setTimeout(() => { window.location.href = LOGIN_URL; }, 300);
 }
 
 export { auth, rtdb };

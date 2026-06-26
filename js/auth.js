@@ -5,8 +5,17 @@ import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-da
 const LOGIN_URL = 'https://login.dasopedia.f5.si';
 
 export async function requireAuth(callback) {
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) { window.location.href = LOGIN_URL; return; }
+  // Firebase が auth 状態を確定するまで待つ
+  await new Promise(resolve => {
+    const unsubscribe = onAuthStateChanged(auth, user => {
+      unsubscribe(); // 一度だけ実行
+      resolve(user);
+    });
+  }).then(async user => {
+    if (!user) {
+      window.location.href = LOGIN_URL;
+      return;
+    }
     try {
       const snap = await get(ref(rtdb, `users/${user.uid}`));
       const userData = snap.exists() ? snap.val() : { role: 'viewer' };

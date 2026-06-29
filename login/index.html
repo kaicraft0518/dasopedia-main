@@ -6,10 +6,29 @@
   <title>ログイン — Dasopedia</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3e;
-      --accent: #6c8bef; --accent-hover: #8aa3f5;
-      --text: #e8eaf0; --text-muted: #7b7f96; --error: #ef6c6c;
+    /* ===== テーマ変数 ===== */
+    [data-theme="light"] {
+      --bg: #f5f6fa;
+      --surface: #ffffff;
+      --border: #e2e4ed;
+      --accent: #4f6de0;
+      --accent-hover: #3d5acc;
+      --text: #1a1d2e;
+      --text-muted: #6b7080;
+      --error: #d63b3b;
+      --success: #2a9d6f;
+      --font: 'Inter', 'Hiragino Sans', sans-serif;
+    }
+    [data-theme="dark"] {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --border: #2a2d3e;
+      --accent: #6c8bef;
+      --accent-hover: #8aa3f5;
+      --text: #e8eaf0;
+      --text-muted: #7b7f96;
+      --error: #ef6c6c;
+      --success: #6cefb0;
       --font: 'Inter', 'Hiragino Sans', sans-serif;
     }
     body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
@@ -36,8 +55,16 @@
     .message.error { background: rgba(239,108,108,0.12); border: 1px solid rgba(239,108,108,0.3); color: var(--error); display: block; }
     #field-displayName { display: none; }
   </style>
+  <!-- テーマ初期化（ちらつき防止のため最初に実行） -->
+  <script>
+    (function() {
+      const t = localStorage.getItem('dasopedia-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
 </head>
 <body>
+  <button id="theme-toggle" onclick="window.themeToggle()" title="テーマ切り替え" style="position:fixed;top:16px;right:16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);cursor:pointer;font-size:15px;padding:6px 12px;z-index:999;transition:border-color 0.15s;">🌙</button>
   <div class="card">
     <div class="logo">Dasopedia</div>
     <h1>ようこそ</h1>
@@ -68,6 +95,9 @@
     </div>
   </div>
   <script type="module">
+    import { toggleTheme, updateToggleButton } from 'https://dasopedia.f5.si/js/theme.js';
+    window.themeToggle = toggleTheme;
+    updateToggleButton();
     import { redirectIfLoggedIn, rtdb } from 'https://dasopedia.f5.si/js/auth.js';
     import { auth } from 'https://dasopedia.f5.si/js/firebase.js';
     import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";

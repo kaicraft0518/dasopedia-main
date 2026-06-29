@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ログイン — Dasopedia</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3e;
+      --accent: #6c8bef; --accent-hover: #8aa3f5;
+      --text: #e8eaf0; --text-muted: #7b7f96; --error: #ef6c6c;
+      --font: 'Inter', 'Hiragino Sans', sans-serif;
+    }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 48px 40px; width: 100%; max-width: 420px; }
+    .logo { font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 32px; }
+    h1 { font-size: 24px; font-weight: 700; margin-bottom: 28px; letter-spacing: -0.02em; }
+    .tabs { display: flex; border: 1px solid var(--border); border-radius: 8px; padding: 3px; margin-bottom: 28px; }
+    .tab { flex: 1; background: none; border: none; border-radius: 6px; color: var(--text-muted); cursor: pointer; font-family: var(--font); font-size: 13px; font-weight: 600; padding: 8px; transition: all 0.15s; }
+    .tab.active { background: var(--accent); color: #fff; }
+    .form { display: flex; flex-direction: column; gap: 14px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+    input { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font); font-size: 14px; padding: 12px 14px; outline: none; width: 100%; transition: border-color 0.15s; }
+    input:focus { border-color: var(--accent); }
+    .btn-primary { background: var(--accent); border: none; border-radius: 8px; color: #fff; cursor: pointer; font-family: var(--font); font-size: 14px; font-weight: 600; padding: 13px; width: 100%; margin-top: 4px; transition: background 0.15s; }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .divider { display: flex; align-items: center; gap: 12px; }
+    .divider::before, .divider::after { content: ''; flex: 1; border-top: 1px solid var(--border); }
+    .divider span { font-size: 12px; color: var(--text-muted); }
+    .btn-google { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); cursor: pointer; font-family: var(--font); font-size: 14px; padding: 12px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; transition: border-color 0.15s; }
+    .btn-google:hover { border-color: var(--accent); }
+    .message { font-size: 13px; padding: 12px 14px; border-radius: 8px; display: none; }
+    .message.error { background: rgba(239,108,108,0.12); border: 1px solid rgba(239,108,108,0.3); color: var(--error); display: block; }
+    #field-displayName { display: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">Dasopedia</div>
+    <h1>ようこそ</h1>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('login')">ログイン</button>
+      <button class="tab" onclick="switchTab('register')">新規登録</button>
+    </div>
+    <div class="form">
+      <div class="field" id="field-displayName">
+        <label>表示名</label>
+        <input type="text" id="displayName" placeholder="あなたの名前" autocomplete="name">
+      </div>
+      <div class="field">
+        <label>メールアドレス</label>
+        <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>パスワード</label>
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div id="msg" class="message"></div>
+      <button class="btn-primary" id="submitBtn" onclick="doSubmit()">ログイン</button>
+      <div class="divider"><span>または</span></div>
+      <button class="btn-google" onclick="doGoogle()">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>
+        Google でログイン
+      </button>
+    </div>
+  </div>
+  <script type="module">
+    import { redirectIfLoggedIn, rtdb } from 'https://dasopedia.f5.si/js/auth.js';
+    import { auth } from 'https://dasopedia.f5.si/js/firebase.js';
+    import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    redirectIfLoggedIn();
+
+    const msgEl = document.getElementById('msg');
+    const btn   = document.getElementById('submitBtn');
+    let mode = 'login';
+
+    window.switchTab = function(tab) {
+      mode = tab;
+      document.querySelectorAll('.tab').forEach((t, i) => {
+        t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
+      });
+      document.getElementById('field-displayName').style.display = tab === 'register' ? 'flex' : 'none';
+      btn.textContent = tab === 'login' ? 'ログイン' : 'アカウントを作成';
+      msgEl.className = 'message';
+    };
+
+    function showMsg(text) { msgEl.textContent = text; msgEl.className = 'message error'; }
+
+    async function ensureUserRecord(user) {
+      const snap = await get(ref(rtdb, `users/${user.uid}`));
+      if (!snap.exists()) {
+        await set(ref(rtdb, `users/${user.uid}`), {
+          displayName: user.displayName || '', email: user.email || '',
+          role: 'viewer', createdAt: Date.now()
+        });
+      }
+    }
+
+    window.doSubmit = async function() {
+      const email       = document.getElementById('email').value.trim();
+      const password    = document.getElementById('password').value;
+      const displayName = document.getElementById('displayName').value.trim();
+      if (!email || !password) { showMsg('メールアドレスとパスワードを入力してください。'); return; }
+      if (mode === 'register' && !displayName) { showMsg('表示名を入力してください。'); return; }
+      btn.disabled = true; btn.textContent = '処理中...';
+      try {
+        if (mode === 'login') {
+          const cred = await signInWithEmailAndPassword(auth, email, password);
+          await ensureUserRecord(cred.user);
+        } else {
+          if (password.length < 8) { showMsg('パスワードは8文字以上にしてください。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
+          const cred = await createUserWithEmailAndPassword(auth, email, password);
+          await updateProfile(cred.user, { displayName });
+          await set(ref(rtdb, `users/${cred.user.uid}`), { displayName, email, role: 'viewer', createdAt: Date.now() });
+        }
+        window.location.href = '/';
+      } catch (e) {
+        const msgs = {
+          'auth/invalid-credential': 'メールアドレスまたはパスワードが違います。',
+          'auth/user-not-found': 'アカウントが見つかりません。',
+          'auth/wrong-password': 'パスワードが違います。',
+          'auth/email-already-in-use': 'このメールアドレスは既に使用されています。',
+          'auth/invalid-email': '有効なメールアドレスを入力してください。',
+          'auth/weak-password': 'パスワードが弱すぎます。'
+        };
+        showMsg(msgs[e.code] || `エラー: ${e.message}`);
+        btn.disabled = false; btn.textContent = mode === 'login' ? 'ログイン' : 'アカウントを作成';
+      }
+    };
+
+    window.doGoogle = async function() {
+      try {
+        const provider = new GoogleAuthProvider();
+        const cred = await signInWithPopup(auth, provider);
+        await ensureUserRecord(cred.user);
+        window.location.href = '/';
+      } catch (e) {
+        if (e.code !== 'auth/popup-closed-by-user') showMsg(`Googleログインエラー: ${e.message}`);
+      }
+    };
+  </script>
+</body>
+</html>

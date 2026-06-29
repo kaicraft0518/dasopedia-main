@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>セットアップ — Dasopedia</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3e; --accent: #6c8bef; --accent-hover: #8aa3f5; --text: #e8eaf0; --text-muted: #7b7f96; --error: #ef6c6c; --success: #6cefb0; --font: 'Inter', 'Hiragino Sans', sans-serif; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 48px 40px; width: 100%; max-width: 440px; }
+    .logo { font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 32px; }
+    h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 14px; color: var(--text-muted); margin-bottom: 36px; line-height: 1.6; }
+    .form { display: flex; flex-direction: column; gap: 16px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+    input { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font); font-size: 14px; padding: 12px 14px; outline: none; width: 100%; transition: border-color 0.15s; }
+    input:focus { border-color: var(--accent); }
+    .btn { background: var(--accent); border: none; border-radius: 8px; color: #fff; cursor: pointer; font-family: var(--font); font-size: 14px; font-weight: 600; padding: 13px; width: 100%; margin-top: 4px; transition: background 0.15s; }
+    .btn:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .warning { background: rgba(239,180,108,0.08); border: 1px solid rgba(239,180,108,0.25); border-radius: 8px; padding: 14px; font-size: 13px; color: #efb46c; line-height: 1.6; margin-bottom: 4px; }
+    .message { font-size: 13px; padding: 12px 14px; border-radius: 8px; display: none; }
+    .message.error { background: rgba(239,108,108,0.12); border: 1px solid rgba(239,108,108,0.3); color: var(--error); display: block; }
+    .loading { text-align: center; color: var(--text-muted); font-size: 14px; padding: 20px 0; }
+    #done-state { text-align: center; display: none; }
+    #done-state .check { font-size: 48px; margin-bottom: 16px; }
+    #done-state p { color: var(--text-muted); font-size: 14px; line-height: 1.8; }
+    #done-state a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">Dasopedia</div>
+    <div id="loading-state" class="loading">確認中...</div>
+    <div id="setup-state" style="display:none">
+      <h1>初回セットアップ</h1>
+      <p class="subtitle">ownerアカウントを作成します。このページは一度だけ使用できます。</p>
+      <div class="form">
+        <div class="warning">⚠️ ownerは1人のみです。設定後は変更できません。</div>
+        <div class="field"><label>表示名</label><input type="text" id="displayName" placeholder="あなたの名前"></div>
+        <div class="field"><label>メールアドレス</label><input type="email" id="email" placeholder="owner@example.com"></div>
+        <div class="field"><label>パスワード</label><input type="password" id="password" placeholder="8文字以上"></div>
+        <div id="msg" class="message"></div>
+        <button class="btn" id="setupBtn" onclick="doSetup()">ownerとして登録する</button>
+      </div>
+    </div>
+    <div id="done-state">
+      <div class="check">✅</div>
+      <h1 style="margin-bottom:12px">セットアップ完了</h1>
+      <p>ownerアカウントが作成されました。<br>このページは今後アクセスできません。<br><br>
+        <a href="/login/">ログインする →</a>
+      </p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { rtdb } from 'https://dasopedia.f5.si/js/firebase.js';
+    import { auth } from 'https://dasopedia.f5.si/js/firebase.js';
+    import { createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const loadingEl = document.getElementById('loading-state');
+    const setupEl   = document.getElementById('setup-state');
+    const doneEl    = document.getElementById('done-state');
+    const msgEl     = document.getElementById('msg');
+
+    async function checkOwnerExists() {
+      const snap = await get(ref(rtdb, 'users'));
+      if (!snap.exists()) return false;
+      return Object.values(snap.val()).some(u => u.role === 'owner');
+    }
+
+    (async () => {
+      try {
+        const ownerExists = await checkOwnerExists();
+        loadingEl.style.display = 'none';
+        if (ownerExists) { doneEl.style.display = 'block'; }
+        else { setupEl.style.display = 'block'; }
+      } catch (e) {
+        loadingEl.textContent = '接続エラー。Firebase設定を確認してください。';
+      }
+    })();
+
+    function showMsg(text) { msgEl.textContent = text; msgEl.className = 'message error'; }
+
+    window.doSetup = async function() {
+      const displayName = document.getElementById('displayName').value.trim();
+      const email       = document.getElementById('email').value.trim();
+      const password    = document.getElementById('password').value;
+      const btn         = document.getElementById('setupBtn');
+
+      if (!displayName || !email || !password) { showMsg('すべての項目を入力してください。'); return; }
+      if (password.length < 8) { showMsg('パスワードは8文字以上にしてください。'); return; }
+
+      btn.disabled = true; btn.textContent = '処理中...';
+      try {
+        if (await checkOwnerExists()) { showMsg('ownerは既に設定されています。'); btn.disabled = false; btn.textContent = 'ownerとして登録する'; return; }
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(cred.user, { displayName });
+        await set(ref(rtdb, `users/${cred.user.uid}`), { displayName, email, role: 'owner', createdAt: Date.now() });
+        setupEl.style.display = 'none';
+        doneEl.style.display = 'block';
+      } catch (e) {
+        const msgs = {
+          'auth/email-already-in-use': 'このメールアドレスは既に使用されています。',
+          'auth/invalid-email': '有効なメールアドレスを入力してください。',
+          'auth/weak-password': 'パスワードが弱すぎます。'
+        };
+        showMsg(msgs[e.code] || `エラー: ${e.message}`);
+        btn.disabled = false; btn.textContent = 'ownerとして登録する';
+      }
+    };
+  </script>
+</body>
+</html>

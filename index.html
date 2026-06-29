@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dasopedia</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3e;
+      --accent: #6c8bef; --accent-hover: #8aa3f5;
+      --text: #e8eaf0; --text-muted: #7b7f96; --error: #ef6c6c;
+      --font: 'Inter', 'Hiragino Sans', sans-serif;
+    }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+    nav { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 56px; position: sticky; top: 0; z-index: 100; }
+    .nav-logo { font-size: 16px; font-weight: 700; color: var(--text); text-decoration: none; letter-spacing: -0.02em; }
+    .nav-logo span { color: var(--accent); }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .nav-search { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font); font-size: 13px; padding: 7px 12px; outline: none; width: 200px; transition: border-color 0.15s; }
+    .nav-search:focus { border-color: var(--accent); }
+    .nav-link { color: var(--text-muted); font-size: 13px; text-decoration: none; transition: color 0.15s; }
+    .nav-link:hover { color: var(--text); }
+    .btn-sm { background: var(--accent); border: none; border-radius: 7px; color: #fff; cursor: pointer; font-family: var(--font); font-size: 13px; font-weight: 600; padding: 7px 14px; text-decoration: none; transition: background 0.15s; }
+    .btn-sm:hover { background: var(--accent-hover); }
+    .main { max-width: 900px; margin: 0 auto; padding: 48px 24px; }
+    .hero { margin-bottom: 48px; }
+    .hero h1 { font-size: 36px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 8px; }
+    .hero h1 span { color: var(--accent); }
+    .hero p { color: var(--text-muted); font-size: 15px; }
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .section-title { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+    .article-grid { display: grid; gap: 12px; }
+    .article-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; text-decoration: none; color: var(--text); transition: border-color 0.15s; display: flex; align-items: center; justify-content: space-between; }
+    .article-card:hover { border-color: var(--accent); }
+    .article-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .article-meta { font-size: 12px; color: var(--text-muted); }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .tag { background: rgba(108,139,239,0.12); border: 1px solid rgba(108,139,239,0.25); border-radius: 4px; color: var(--accent); font-size: 11px; font-weight: 600; padding: 2px 8px; }
+    .arrow { color: var(--text-muted); font-size: 18px; }
+    .empty { color: var(--text-muted); font-size: 14px; text-align: center; padding: 40px; }
+    .avatar-wrap { position: relative; }
+    .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); border: 2px solid transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; transition: border-color 0.15s; user-select: none; }
+    .avatar:hover, .avatar.open { border-color: var(--accent-hover); }
+    .avatar-dropdown { position: absolute; top: calc(100% + 10px); right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 8px; min-width: 200px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); display: none; z-index: 200; }
+    .avatar-dropdown.open { display: block; }
+    .dropdown-header { padding: 10px 12px 12px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+    .dropdown-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+    .dropdown-role { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+    .dropdown-item { display: block; padding: 9px 12px; border-radius: 7px; font-size: 13px; color: var(--text-muted); text-decoration: none; cursor: pointer; transition: background 0.1s, color 0.1s; background: none; border: none; width: 100%; text-align: left; font-family: var(--font); }
+    .dropdown-item:hover { background: var(--bg); color: var(--text); }
+    .dropdown-item.danger { color: var(--error); }
+    .dropdown-item.danger:hover { background: rgba(239,108,108,0.08); }
+    .dropdown-divider { border: none; border-top: 1px solid var(--border); margin: 6px 0; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="nav-logo" href="/"><span>D</span>asopedia</a>
+    <div class="nav-right">
+      <input class="nav-search" type="search" placeholder="記事を検索..." onkeydown="if(event.key==='Enter')goSearch(this.value)">
+      <a class="nav-link" href="/wiki/">記事一覧</a>
+      <a class="btn-sm" href="/edit/">+ 記事を書く</a>
+      <div class="avatar-wrap">
+        <div class="avatar" id="avatar" onclick="toggleDropdown()"></div>
+        <div class="avatar-dropdown" id="avatar-dropdown">
+          <div class="dropdown-header">
+            <div class="dropdown-name" id="dropdown-name">...</div>
+            <div class="dropdown-role" id="dropdown-role">...</div>
+          </div>
+          <a class="dropdown-item" href="/accounts/">アカウント設定</a>
+          <hr class="dropdown-divider">
+          <button class="dropdown-item danger" onclick="doLogout()">ログアウト</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <div class="main">
+    <div class="hero">
+      <h1>みんなの <span>知識</span> をここに</h1>
+      <p id="welcome-msg">読み込み中...</p>
+    </div>
+    <div class="section-header">
+      <div class="section-title">最近の記事</div>
+      <a class="nav-link" href="/wiki/">すべて見る →</a>
+    </div>
+    <div class="article-grid" id="article-list"><div class="empty">読み込み中...</div></div>
+  </div>
+  <script type="module">
+    import { requireAuth, logout } from 'https://dasopedia.f5.si/js/auth.js';
+    import { db } from 'https://dasopedia.f5.si/js/firebase.js';
+    import { collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    window.doLogout = logout;
+    window.goSearch = q => { if (q.trim()) window.location.href = `/search/?q=${encodeURIComponent(q.trim())}`; };
+    window.toggleDropdown = function() {
+      document.getElementById('avatar').classList.toggle('open');
+      document.getElementById('avatar-dropdown').classList.toggle('open');
+    };
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.avatar-wrap')) {
+        document.getElementById('avatar').classList.remove('open');
+        document.getElementById('avatar-dropdown').classList.remove('open');
+      }
+    });
+
+    requireAuth(async (user, userData) => {
+      const name = userData.displayName || user.displayName || 'メンバー';
+      document.getElementById('welcome-msg').textContent = `ようこそ、${name} さん`;
+      document.getElementById('avatar').textContent = name.charAt(0).toUpperCase();
+      document.getElementById('dropdown-name').textContent = name;
+      document.getElementById('dropdown-role').textContent = userData.role || 'viewer';
+      try {
+        const q = query(collection(db, 'articles'), orderBy('updatedAt', 'desc'), limit(10));
+        const snap = await getDocs(q);
+        const list = document.getElementById('article-list');
+        if (snap.empty) { list.innerHTML = '<div class="empty">まだ記事がありません。最初の記事を書いてみましょう！</div>'; return; }
+        list.innerHTML = '';
+        snap.forEach(doc => {
+          const d = doc.data();
+          const date = d.updatedAt ? new Date(d.updatedAt.toMillis()).toLocaleDateString('ja-JP') : '';
+          const tagsHtml = (d.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
+          list.innerHTML += `<a class="article-card" href="/wiki/${encodeURIComponent(d.slug || doc.id)}">
+            <div>
+              <div class="article-title">${d.title}</div>
+              <div class="article-meta">${d.createdByName || '不明'} · ${date}</div>
+              ${tagsHtml ? `<div class="tags">${tagsHtml}</div>` : ''}
+            </div>
+            <div class="arrow">›</div>
+          </a>`;
+        });
+      } catch (e) {
+        document.getElementById('article-list').innerHTML = '<div class="empty">記事の読み込みに失敗しました。</div>';
+      }
+    });
+  </script>
+</body>
+</html>

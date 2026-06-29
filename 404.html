@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 — Dasopedia</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #0f1117; --accent: #6c8bef; --text: #e8eaf0; --text-muted: #7b7f96; --font: 'Inter', 'Hiragino Sans', sans-serif; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+    h1 { font-size: 72px; font-weight: 700; color: var(--accent); letter-spacing: -0.04em; margin-bottom: 16px; }
+    p { color: var(--text-muted); font-size: 15px; margin-bottom: 28px; }
+    a { background: var(--accent); border-radius: 8px; color: #fff; font-size: 14px; font-weight: 600; padding: 10px 20px; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div>
+    <h1>404</h1>
+    <p>ページが見つかりませんでした。</p>
+    <a href="/">ホームへ戻る</a>
+  </div>
+  <script>
+    // GitHub Pages SPAルーティング用
+    // /wiki/記事名 などのパスを処理する
+    const path = location.pathname;
+    if (path.startsWith('/wiki/') && path !== '/wiki/') {
+      // 記事ページへリダイレクト
+      sessionStorage.setItem('redirect', path);
+      window.location.href = '/wiki/article/' + location.search;
+    }
+  </script>
+</body>
+</html>

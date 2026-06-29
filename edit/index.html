@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>記事を編集 — Dasopedia</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3e;
+      --accent: #6c8bef; --accent-hover: #8aa3f5;
+      --text: #e8eaf0; --text-muted: #7b7f96;
+      --error: #ef6c6c; --success: #6cefb0;
+      --font: 'Inter', 'Hiragino Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); height: 100vh; display: flex; flex-direction: column; }
+    nav { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 56px; flex-shrink: 0; }
+    .nav-logo { font-size: 16px; font-weight: 700; color: var(--text); text-decoration: none; }
+    .nav-logo span { color: var(--accent); }
+    .nav-center { font-size: 14px; color: var(--text-muted); }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .btn-save { background: var(--accent); border: none; border-radius: 7px; color: #fff; cursor: pointer; font-family: var(--font); font-size: 13px; font-weight: 600; padding: 7px 18px; transition: background 0.15s; }
+    .btn-save:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-cancel { background: none; border: 1px solid var(--border); border-radius: 7px; color: var(--text-muted); cursor: pointer; font-family: var(--font); font-size: 13px; padding: 7px 14px; text-decoration: none; transition: border-color 0.15s; }
+    .btn-cancel:hover { border-color: var(--accent); color: var(--text); }
+    .editor-area { display: flex; flex: 1; overflow: hidden; }
+    .editor-left { display: flex; flex-direction: column; flex: 1; border-right: 1px solid var(--border); overflow: hidden; }
+    .editor-meta { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+    .meta-row { display: flex; gap: 10px; }
+    .meta-input { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font); font-size: 13px; padding: 9px 12px; outline: none; transition: border-color 0.15s; }
+    .meta-input:focus { border-color: var(--accent); }
+    #title-input { font-size: 15px; font-weight: 600; flex: 1; }
+    #slug-input { flex: 1; color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; }
+    #tags-input { width: 100%; }
+    .toolbar { display: flex; gap: 4px; padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--surface); flex-wrap: wrap; }
+    .tb-btn { background: none; border: 1px solid transparent; border-radius: 5px; color: var(--text-muted); cursor: pointer; font-family: var(--font-mono); font-size: 12px; padding: 4px 8px; transition: all 0.1s; }
+    .tb-btn:hover { background: var(--bg); border-color: var(--border); color: var(--text); }
+    textarea { background: var(--bg); border: none; color: var(--text); font-family: var(--font-mono); font-size: 13px; line-height: 1.7; padding: 20px; resize: none; flex: 1; outline: none; }
+    .editor-right { flex: 1; overflow-y: auto; padding: 24px 32px; }
+    .preview-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 20px; }
+    .preview-body { line-height: 1.8; font-size: 15px; }
+    .preview-body h2 { font-size: 20px; border-bottom: 1px solid var(--border); padding-bottom: 6px; margin: 24px 0 10px; }
+    .preview-body h3 { font-size: 17px; margin: 20px 0 8px; }
+    .preview-body p { margin-bottom: 14px; }
+    .preview-body ul, .preview-body ol { margin: 0 0 14px 24px; }
+    .preview-body code { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-mono); font-size: 12px; padding: 2px 5px; }
+    .preview-body pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin: 14px 0; overflow-x: auto; }
+    .preview-body pre code { background: none; border: none; padding: 0; }
+    .preview-body blockquote { border-left: 3px solid var(--accent); margin: 14px 0; padding: 8px 16px; color: var(--text-muted); }
+    .preview-body a { color: var(--accent); }
+    .preview-body table { border-collapse: collapse; width: 100%; margin: 14px 0; }
+    .preview-body th, .preview-body td { border: 1px solid var(--border); padding: 8px 12px; }
+    .preview-body th { background: var(--surface); font-weight: 600; }
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 20px; font-size: 13px; display: none; z-index: 999; }
+    .toast.show { display: block; }
+    .toast.success { border-color: rgba(108,239,176,0.4); color: var(--success); }
+    .toast.error { border-color: rgba(239,108,108,0.4); color: var(--error); }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="nav-logo" href="/"><span>D</span>asopedia</a>
+    <div class="nav-center" id="nav-mode">新規作成</div>
+    <div class="nav-right">
+      <a class="btn-cancel" href="/wiki/">キャンセル</a>
+      <button class="btn-save" id="saveBtn" onclick="doSave()">保存</button>
+    </div>
+  </nav>
+  <div class="editor-area">
+    <div class="editor-left">
+      <div class="editor-meta">
+        <div class="meta-row">
+          <input class="meta-input" id="title-input" placeholder="記事タイトル" oninput="autoSlug()">
+          <input class="meta-input" id="slug-input" placeholder="slug（URLに使用）">
+        </div>
+        <input class="meta-input" id="tags-input" placeholder="タグ（カンマ区切り）　例: JavaScript, Firebase">
+      </div>
+      <div class="toolbar">
+        <button class="tb-btn" onclick="ins('**','**')"><b>B</b></button>
+        <button class="tb-btn" onclick="ins('*','*')"><i>I</i></button>
+        <button class="tb-btn" onclick="ins('`','`')">code</button>
+        <button class="tb-btn" onclick="insLine('# ')">H1</button>
+        <button class="tb-btn" onclick="insLine('## ')">H2</button>
+        <button class="tb-btn" onclick="insLine('### ')">H3</button>
+        <button class="tb-btn" onclick="insLine('- ')">リスト</button>
+        <button class="tb-btn" onclick="insLine('> ')">引用</button>
+        <button class="tb-btn" onclick="ins('\n```\n','\n```\n')">```</button>
+        <button class="tb-btn" onclick="ins('[','](url)')">リンク</button>
+      </div>
+      <textarea id="editor" placeholder="Markdown で記事を書く..." oninput="updatePreview()"></textarea>
+    </div>
+    <div class="editor-right">
+      <div class="preview-label">プレビュー</div>
+      <div class="preview-body" id="preview"></div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script type="module">
+    import { requireEditor } from 'https://dasopedia.f5.si/js/auth.js';
+    import { db } from 'https://dasopedia.f5.si/js/firebase.js';
+    import { collection, doc, getDoc, addDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    let currentUser, currentUserData;
+    const params = new URLSearchParams(location.search);
+    const articleId = params.get('id') || null;
+    if (articleId) document.getElementById('nav-mode').textContent = '記事を編集';
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.className = `toast show ${type}`;
+      setTimeout(() => t.className = 'toast', 3000);
+    }
+
+    window.updatePreview = () => {
+      document.getElementById('preview').innerHTML = marked.parse(document.getElementById('editor').value || '');
+    };
+
+    window.autoSlug = () => {
+      if (articleId) return;
+      const slug = document.getElementById('title-input').value
+        .toLowerCase()
+        .replace(/[^\w\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf\s-]/g, '')
+        .replace(/\s+/g, '-').replace(/-+/g, '-').trim();
+      document.getElementById('slug-input').value = slug;
+    };
+
+    window.ins = (before, after) => {
+      const ta = document.getElementById('editor');
+      const s = ta.selectionStart, e = ta.selectionEnd;
+      ta.value = ta.value.slice(0, s) + before + ta.value.slice(s, e) + after + ta.value.slice(e);
+      ta.setSelectionRange(s + before.length, e + before.length);
+      ta.focus(); updatePreview();
+    };
+
+    window.insLine = prefix => {
+      const ta = document.getElementById('editor');
+      const s = ta.selectionStart;
+      const lineStart = ta.value.lastIndexOf('\n', s - 1) + 1;
+      ta.value = ta.value.slice(0, lineStart) + prefix + ta.value.slice(lineStart);
+      ta.setSelectionRange(s + prefix.length, s + prefix.length);
+      ta.focus(); updatePreview();
+    };
+
+    window.doSave = async () => {
+      const title   = document.getElementById('title-input').value.trim();
+      const slug    = document.getElementById('slug-input').value.trim();
+      const content = document.getElementById('editor').value;
+      const tags    = document.getElementById('tags-input').value.split(',').map(t => t.trim()).filter(Boolean);
+      if (!title)        { showToast('タイトルを入力してください。', 'error'); return; }
+      if (!slug)         { showToast('スラグを入力してください。', 'error'); return; }
+      if (!content.trim()){ showToast('本文を入力してください。', 'error'); return; }
+
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true; btn.textContent = '保存中...';
+
+      const contentText = content.replace(/[#*`_~\[\]()>!]/g, '').replace(/\s+/g, ' ').trim();
+
+      try {
+        if (articleId) {
+          await updateDoc(doc(db, 'articles', articleId), { title, slug, content, contentText, tags, updatedAt: serverTimestamp() });
+          showToast('保存しました！');
+        } else {
+          await addDoc(collection(db, 'articles'), {
+            title, slug, content, contentText, tags,
+            createdBy: currentUser.uid,
+            createdByName: currentUserData.displayName || currentUser.displayName || '',
+            createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+          });
+          showToast('記事を作成しました！');
+          setTimeout(() => window.location.href = `/wiki/${encodeURIComponent(slug)}`, 1200);
+        }
+      } catch (e) {
+        showToast(`保存に失敗しました: ${e.message}`, 'error');
+      }
+      btn.disabled = false; btn.textContent = '保存';
+    };
+
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); doSave(); }
+    });
+
+    requireEditor(async (user, userData) => {
+      currentUser = user; currentUserData = userData;
+      if (articleId) {
+        try {
+          const snap = await getDoc(doc(db, 'articles', articleId));
+          if (snap.exists()) {
+            const d = snap.data();
+            document.getElementById('title-input').value = d.title || '';
+            document.getElementById('slug-input').value  = d.slug  || '';
+            document.getElementById('tags-input').value  = (d.tags || []).join(', ');
+            document.getElementById('editor').value      = d.content || '';
+            updatePreview();
+          }
+        } catch (e) { showToast('記事の読み込みに失敗しました。', 'error'); }
+      }
+    });
+  </script>
+</body>
+</html>

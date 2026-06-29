@@ -120,7 +120,7 @@
           const d = doc.data();
           const date = d.updatedAt ? new Date(d.updatedAt.toMillis()).toLocaleDateString('ja-JP') : '';
           const tagsHtml = (d.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
-          list.innerHTML += `<a class="article-card" href="/wiki/${encodeURIComponent(d.slug || doc.id)}">
+          list.innerHTML += `<a class="article-card" href="/wiki/article/?slug=${encodeURIComponent(d.slug || doc.id)}">
             <div>
               <div class="article-title">${d.title}</div>
               <div class="article-meta">${d.createdByName || '不明'} · ${date}</div>

@@ -119,7 +119,7 @@
         const date = a.updatedAt ? new Date(a.updatedAt.toMillis()).toLocaleDateString('ja-JP') : '';
         const tagsHtml = (a.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
         const ex = highlight(excerpt(a.contentText, kw), kw);
-        return `<a class="result-card" href="/wiki/${encodeURIComponent(a.slug || a.id)}">
+        return `<a class="result-card" href="/wiki/article/?slug=${encodeURIComponent(a.slug || a.id)}">
           <div>
             <div class="result-title">${highlight(a.title, kw)}</div>
             ${ex ? `<div class="result-excerpt">${ex}</div>` : ''}

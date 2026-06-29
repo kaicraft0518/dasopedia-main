@@ -171,7 +171,7 @@
             createdAt: serverTimestamp(), updatedAt: serverTimestamp()
           });
           showToast('記事を作成しました！');
-          setTimeout(() => window.location.href = `/wiki/${encodeURIComponent(slug)}`, 1200);
+          setTimeout(() => window.location.href = `/wiki/article/?slug=${encodeURIComponent(slug)}`, 1200);
         }
       } catch (e) {
         showToast(`保存に失敗しました: ${e.message}`, 'error');

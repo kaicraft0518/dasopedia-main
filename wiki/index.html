@@ -75,7 +75,7 @@
         const tagsHtml = (a.tags || []).map(t =>
           `<span class="tag" onclick="event.preventDefault();document.getElementById('filter-tag').value='${t}';renderList()">${t}</span>`
         ).join('');
-        return `<a class="article-card" href="/wiki/${encodeURIComponent(a.slug || a.id)}">
+        return `<a class="article-card" href="/wiki/article/?slug=${encodeURIComponent(a.slug || a.id)}">
           <div>
             <div class="article-title">${a.title}</div>
             <div class="article-meta">${a.createdByName || '不明'} · ${date}</div>

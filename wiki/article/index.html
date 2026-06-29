@@ -61,7 +61,7 @@
     import { collection, query, where, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     window.doLogout = logout;
-    const slug = decodeURIComponent(location.pathname.split('/wiki/')[1]?.replace(/\/$/, '') || '');
+    const slug = decodeURIComponent(new URLSearchParams(location.search).get('slug') || '');
 
     requireAuth(async (user, userData) => {
       if (!slug) { window.location.href = '/wiki/'; return; }

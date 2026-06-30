@@ -211,6 +211,52 @@
       window.changeRole = changeRole;
       window.toggleBan  = toggleBan;
     });
+
+    // ===== 招待コード関連（requireAdminの外で定義） =====
+    window.openInviteModal = function() {
+      const adminOpt = document.getElementById('invite-admin-opt');
+      if (adminOpt) adminOpt.style.display = myRole === 'owner' ? 'block' : 'none';
+      document.getElementById('invite-result').style.display = 'none';
+      document.getElementById('invite-code-display').value = '';
+      document.getElementById('invite-meta').textContent = '';
+      document.getElementById('invite-modal').classList.add('open');
+    };
+
+    window.closeInviteModal = () => document.getElementById('invite-modal').classList.remove('open');
+
+    window.generateInvite = async function() {
+      const role    = document.getElementById('invite-role').value;
+      const expires = parseInt(document.getElementById('invite-expires').value);
+      const chars   = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+      let code = '';
+      for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+      try {
+        await dbSet(ref(rtdb, `invites/${code}`), {
+          role,
+          createdAt: Date.now(),
+          expiresAt: expires > 0 ? Date.now() + expires : null,
+          usedBy: null,
+          usedAt: null
+        });
+        document.getElementById('invite-code-display').value = code;
+        document.getElementById('invite-result').style.display = 'block';
+        const expText = expires > 0
+          ? `有効期限: ${new Date(Date.now() + expires).toLocaleString('ja-JP')}`
+          : '有効期限: 無期限';
+        document.getElementById('invite-meta').textContent = `ロール: ${role} ／ ${expText}`;
+      } catch (e) {
+        alert(`コードの発行に失敗しました: ${e.message}`);
+      }
+    };
+
+    window.copyInviteCode = function() {
+      const code = document.getElementById('invite-code-display').value;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('copy-btn');
+        btn.textContent = 'コピー済み！';
+        setTimeout(() => btn.textContent = 'コピー', 2000);
+      });
+    };
   </script>
 </body>
 </html>

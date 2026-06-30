@@ -138,15 +138,25 @@
   </div>
 
   <script type="module">
-    import { toggleTheme, updateToggleButton } from 'https://dasopedia.f5.si/js/theme.js';
-    import { requireAdmin, logout } from 'https://dasopedia.f5.si/js/auth.js';
-    import { rtdb } from 'https://dasopedia.f5.si/js/firebase.js';
-    import { ref as dbRef, set as dbSet } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-    import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+console.log("① start");
 
-    window.themeToggle = toggleTheme;
-    window.doLogout = logout;
-    updateToggleButton();
+import { toggleTheme, updateToggleButton } from 'https://dasopedia.f5.si/js/theme.js';
+import { requireAdmin, logout } from 'https://dasopedia.f5.si/js/auth.js';
+import { rtdb } from 'https://dasopedia.f5.si/js/firebase.js';
+import { ref as dbRef, set as dbSet } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+console.log("② imports OK");
+
+window.themeToggle = toggleTheme;
+window.doLogout = logout;
+
+console.log("③ before updateToggleButton");
+
+updateToggleButton();
+
+console.log("④ after updateToggleButton");
+
     window.openModal  = () => document.getElementById('modal').classList.add('open');
     window.closeModal = () => document.getElementById('modal').classList.remove('open');
     window.openInviteModal = () => {

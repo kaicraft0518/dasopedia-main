@@ -54,7 +54,6 @@
     .message { font-size: 13px; padding: 12px 14px; border-radius: 8px; display: none; }
     .message.error { background: rgba(239,108,108,0.12); border: 1px solid rgba(239,108,108,0.3); color: var(--error); display: block; }
     #field-displayName { display: none; }
-    #field-inviteCode { display: none; }
   </style>
   <!-- テーマ初期化（ちらつき防止のため最初に実行） -->
   <script>
@@ -77,10 +76,6 @@
       <div class="field" id="field-displayName">
         <label>表示名</label>
         <input type="text" id="displayName" placeholder="あなたの名前" autocomplete="name">
-      </div>
-      <div class="field" id="field-inviteCode">
-        <label>招待コード</label>
-        <input type="text" id="inviteCode" placeholder="招待コードを入力" autocomplete="off" style="font-family:monospace;letter-spacing:0.08em">
       </div>
       <div class="field">
         <label>メールアドレス</label>
@@ -120,7 +115,6 @@
         t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
       });
       document.getElementById('field-displayName').style.display = tab === 'register' ? 'flex' : 'none';
-      document.getElementById('field-inviteCode').style.display = tab === 'register' ? 'flex' : 'none';
       btn.textContent = tab === 'login' ? 'ログイン' : 'アカウントを作成';
       msgEl.className = 'message';
     };
@@ -150,21 +144,9 @@
           await ensureUserRecord(cred.user);
         } else {
           if (password.length < 8) { showMsg('パスワードは8文字以上にしてください。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
-          // 招待コード検証
-          const inviteCode = document.getElementById('inviteCode').value.trim();
-          if (!inviteCode) { showMsg('招待コードを入力してください。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
-          const inviteSnap = await get(ref(rtdb, `invites/${inviteCode}`));
-          if (!inviteSnap.exists()) { showMsg('招待コードが無効です。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
-          const invite = inviteSnap.val();
-          if (invite.usedBy) { showMsg('この招待コードは既に使用されています。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
-          if (invite.expiresAt && Date.now() > invite.expiresAt) { showMsg('招待コードの有効期限が切れています。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
-
           const cred = await createUserWithEmailAndPassword(auth, email, password);
           await updateProfile(cred.user, { displayName });
-          await set(ref(rtdb, `users/${cred.user.uid}`), { displayName, email, role: invite.role || 'viewer', createdAt: Date.now() });
-          // 招待コードを使用済みにする
-          await set(ref(rtdb, `invites/${inviteCode}/usedBy`), cred.user.uid);
-          await set(ref(rtdb, `invites/${inviteCode}/usedAt`), Date.now());
+          await set(ref(rtdb, `users/${cred.user.uid}`), { displayName, email, role: 'viewer', createdAt: Date.now() });
         }
         window.location.href = '/';
       } catch (e) {

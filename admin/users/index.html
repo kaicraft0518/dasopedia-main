@@ -69,10 +69,7 @@
   <div class="main">
     <div class="page-header">
       <h1>ユーザー管理</h1>
-      <div style="display:flex;gap:10px">
-        <button class="help-btn" onclick="openInviteModal()">✉️ 招待コードを発行</button>
-        <button class="help-btn" onclick="openModal()">❓ ロールについて</button>
-      </div>
+      <button class="help-btn" onclick="openModal()">❓ ロールについて</button>
     </div>
     <table id="user-table">
       <thead>
@@ -86,42 +83,6 @@
       </thead>
       <tbody id="user-tbody"><tr><td colspan="5" class="empty">読み込み中...</td></tr></tbody>
     </table>
-  </div>
-
-  <!-- 招待コードモーダル -->
-  <div class="modal-overlay" id="invite-modal" onclick="if(event.target===this)closeInviteModal()">
-    <div class="modal">
-      <button class="modal-close" onclick="closeInviteModal()">✕</button>
-      <div class="modal-title">招待コードを発行</div>
-      <div style="display:flex;flex-direction:column;gap:14px">
-        <div>
-          <label style="font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:6px">付与するロール</label>
-          <select id="invite-role" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:14px;padding:10px 12px;outline:none;width:100%">
-            <option value="editor">editor（記事の作成・編集）</option>
-            <option value="viewer">viewer（閲覧のみ）</option>
-            <option value="admin" id="invite-admin-opt" style="display:none">admin（管理者）</option>
-          </select>
-        </div>
-        <div>
-          <label style="font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:6px">有効期限</label>
-          <select id="invite-expires" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:14px;padding:10px 12px;outline:none;width:100%">
-            <option value="86400000">24時間</option>
-            <option value="604800000" selected>7日間</option>
-            <option value="2592000000">30日間</option>
-            <option value="0">無期限</option>
-          </select>
-        </div>
-        <button onclick="generateInvite()" style="background:var(--accent);border:none;border-radius:8px;color:#fff;cursor:pointer;font-family:var(--font);font-size:14px;font-weight:600;padding:12px;width:100%">コードを発行する</button>
-        <div id="invite-result" style="display:none">
-          <label style="font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:6px">発行されたコード</label>
-          <div style="display:flex;gap:8px">
-            <input id="invite-code-display" readonly style="background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:monospace;font-size:16px;letter-spacing:0.1em;padding:10px 14px;flex:1;outline:none">
-            <button onclick="copyInviteCode()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);cursor:pointer;font-family:var(--font);font-size:13px;padding:10px 14px;white-space:nowrap;transition:border-color 0.15s" id="copy-btn">コピー</button>
-          </div>
-          <div id="invite-meta" style="font-size:12px;color:var(--text-muted);margin-top:8px"></div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- ロール説明モーダル -->
@@ -138,80 +99,19 @@
   </div>
 
   <script type="module">
-console.log("① start");
+    import { toggleTheme, updateToggleButton } from 'https://dasopedia.f5.si/js/theme.js';
+    import { requireAdmin, logout } from 'https://dasopedia.f5.si/js/auth.js';
+    import { rtdb } from 'https://dasopedia.f5.si/js/firebase.js';
+    import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-import { toggleTheme, updateToggleButton } from 'https://dasopedia.f5.si/js/theme.js';
-import { requireAdmin, logout } from 'https://dasopedia.f5.si/js/auth.js';
-import { rtdb } from 'https://dasopedia.f5.si/js/firebase.js';
-import { ref as dbRef, set as dbSet } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-console.log("② imports OK");
-
-window.themeToggle = toggleTheme;
-window.doLogout = logout;
-
-console.log("③ before updateToggleButton");
-
-updateToggleButton();
-
-console.log("④ after updateToggleButton");
-
+    window.themeToggle = toggleTheme;
+    window.doLogout = logout;
+    updateToggleButton();
     window.openModal  = () => document.getElementById('modal').classList.add('open');
     window.closeModal = () => document.getElementById('modal').classList.remove('open');
-    window.openInviteModal = () => {
-      document.getElementById('invite-modal').classList.add('open');
-    };
-    
-    window.closeInviteModal = () => {
-      document.getElementById('invite-modal').classList.remove('open');
-    };
 
     const ROLES = ['admin', 'editor', 'viewer', 'banned'];
     let myRole = '';
-
-    function createInviteCode(length = 8) {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let code = '';
-
-  for (let i = 0; i < length; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-
-  return code;
-}
-
-window.generateInvite = function () {
-  const code = createInviteCode();
-
-  document.getElementById('invite-code-display').value = code;
-  document.getElementById('invite-result').style.display = 'block';
-
-  document.getElementById('invite-meta').textContent =
-    `ロール: ${document.getElementById('invite-role').value}`;
-};
-
-window.copyInviteCode = async function () {
-  const code = document.getElementById('invite-code-display').value;
-
-  if (!code) return;
-
-  try {
-    await navigator.clipboard.writeText(code);
-
-    const btn = document.getElementById('copy-btn');
-    const old = btn.textContent;
-
-    btn.textContent = 'コピーしました！';
-
-    setTimeout(() => {
-      btn.textContent = old;
-    }, 1500);
-
-  } catch (e) {
-    alert('コピーに失敗しました。');
-  }
-};
 
     function roleBadge(role) {
       return `<span class="role-badge role-${role}">${role}</span>`;

@@ -69,7 +69,10 @@
   <div class="main">
     <div class="page-header">
       <h1>ユーザー管理</h1>
-      <button class="help-btn" onclick="openModal()">❓ ロールについて</button>
+      <div style="display:flex;gap:10px">
+        <button class="help-btn" onclick="openInviteModal()">✉️ 招待コードを発行</button>
+        <button class="help-btn" onclick="openModal()">❓ ロールについて</button>
+      </div>
     </div>
     <table id="user-table">
       <thead>
@@ -83,6 +86,42 @@
       </thead>
       <tbody id="user-tbody"><tr><td colspan="5" class="empty">読み込み中...</td></tr></tbody>
     </table>
+  </div>
+
+  <!-- 招待コードモーダル -->
+  <div class="modal-overlay" id="invite-modal" onclick="if(event.target===this)closeInviteModal()">
+    <div class="modal">
+      <button class="modal-close" onclick="closeInviteModal()">✕</button>
+      <div class="modal-title">招待コードを発行</div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div>
+          <label style="font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:6px">付与するロール</label>
+          <select id="invite-role" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:14px;padding:10px 12px;outline:none;width:100%">
+            <option value="editor">editor（記事の作成・編集）</option>
+            <option value="viewer">viewer（閲覧のみ）</option>
+            <option value="admin" id="invite-admin-opt" style="display:none">admin（管理者）</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:6px">有効期限</label>
+          <select id="invite-expires" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:14px;padding:10px 12px;outline:none;width:100%">
+            <option value="86400000">24時間</option>
+            <option value="604800000" selected>7日間</option>
+            <option value="2592000000">30日間</option>
+            <option value="0">無期限</option>
+          </select>
+        </div>
+        <button onclick="generateInvite()" style="background:var(--accent);border:none;border-radius:8px;color:#fff;cursor:pointer;font-family:var(--font);font-size:14px;font-weight:600;padding:12px;width:100%">コードを発行する</button>
+        <div id="invite-result" style="display:none">
+          <label style="font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:6px">発行されたコード</label>
+          <div style="display:flex;gap:8px">
+            <input id="invite-code-display" readonly style="background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:monospace;font-size:16px;letter-spacing:0.1em;padding:10px 14px;flex:1;outline:none">
+            <button onclick="copyInviteCode()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);cursor:pointer;font-family:var(--font);font-size:13px;padding:10px 14px;white-space:nowrap;transition:border-color 0.15s" id="copy-btn">コピー</button>
+          </div>
+          <div id="invite-meta" style="font-size:12px;color:var(--text-muted);margin-top:8px"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ロール説明モーダル -->
@@ -102,7 +141,7 @@
     import { toggleTheme, updateToggleButton } from 'https://dasopedia.f5.si/js/theme.js';
     import { requireAdmin, logout } from 'https://dasopedia.f5.si/js/auth.js';
     import { rtdb } from 'https://dasopedia.f5.si/js/firebase.js';
-    import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { ref, get, update, set as dbSet } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
     window.themeToggle = toggleTheme;
     window.doLogout = logout;

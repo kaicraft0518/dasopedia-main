@@ -138,15 +138,25 @@
   </div>
 
   <script type="module">
-    import { toggleTheme, updateToggleButton } from 'https://dasopedia.f5.si/js/theme.js';
-    import { requireAdmin, logout } from 'https://dasopedia.f5.si/js/auth.js';
-    import { rtdb } from 'https://dasopedia.f5.si/js/firebase.js';
-    import { ref as dbRef, set as dbSet } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-    import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+console.log("① start");
 
-    window.themeToggle = toggleTheme;
-    window.doLogout = logout;
-    updateToggleButton();
+import { toggleTheme, updateToggleButton } from 'https://dasopedia.f5.si/js/theme.js';
+import { requireAdmin, logout } from 'https://dasopedia.f5.si/js/auth.js';
+import { rtdb } from 'https://dasopedia.f5.si/js/firebase.js';
+import { ref as dbRef, set as dbSet } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+console.log("② imports OK");
+
+window.themeToggle = toggleTheme;
+window.doLogout = logout;
+
+console.log("③ before updateToggleButton");
+
+updateToggleButton();
+
+console.log("④ after updateToggleButton");
+
     window.openModal  = () => document.getElementById('modal').classList.add('open');
     window.closeModal = () => document.getElementById('modal').classList.remove('open');
     window.openInviteModal = () => {
@@ -159,6 +169,49 @@
 
     const ROLES = ['admin', 'editor', 'viewer', 'banned'];
     let myRole = '';
+
+    function createInviteCode(length = 8) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+
+  for (let i = 0; i < length; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+
+  return code;
+}
+
+window.generateInvite = function () {
+  const code = createInviteCode();
+
+  document.getElementById('invite-code-display').value = code;
+  document.getElementById('invite-result').style.display = 'block';
+
+  document.getElementById('invite-meta').textContent =
+    `ロール: ${document.getElementById('invite-role').value}`;
+};
+
+window.copyInviteCode = async function () {
+  const code = document.getElementById('invite-code-display').value;
+
+  if (!code) return;
+
+  try {
+    await navigator.clipboard.writeText(code);
+
+    const btn = document.getElementById('copy-btn');
+    const old = btn.textContent;
+
+    btn.textContent = 'コピーしました！';
+
+    setTimeout(() => {
+      btn.textContent = old;
+    }, 1500);
+
+  } catch (e) {
+    alert('コピーに失敗しました。');
+  }
+};
 
     function roleBadge(role) {
       return `<span class="role-badge role-${role}">${role}</span>`;

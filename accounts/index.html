@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>アカウント設定 — Dasopedia</title>
+  <script>(function() { const t = localStorage.getItem('dasopedia-theme') || 'light'; document.documentElement.setAttribute('data-theme', t); })();</script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    [data-theme="light"] { --bg: #f5f6fa; --surface: #ffffff; --border: #e2e4ed; --accent: #4f6de0; --accent-hover: #3d5acc; --text: #1a1d2e; --text-muted: #6b7080; --error: #d63b3b; --success: #2a9d6f; --font: 'Inter', 'Hiragino Sans', sans-serif; }
+    [data-theme="dark"]  { --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3e; --accent: #6c8bef; --accent-hover: #8aa3f5; --text: #e8eaf0; --text-muted: #7b7f96; --error: #ef6c6c; --success: #6cefb0; --font: 'Inter', 'Hiragino Sans', sans-serif; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+    nav { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 56px; position: sticky; top: 0; z-index: 100; }
+    .nav-logo { font-size: 16px; font-weight: 700; color: var(--text); text-decoration: none; }
+    .nav-logo span { color: var(--accent); }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .nav-link { color: var(--text-muted); font-size: 13px; text-decoration: none; }
+    .nav-link:hover { color: var(--text); }
+    .tb { background: none; border: 1px solid var(--border); border-radius: 7px; color: var(--text); cursor: pointer; font-size: 15px; padding: 5px 10px; }
+    .main { max-width: 640px; margin: 0 auto; padding: 40px 24px; }
+    h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 32px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin-bottom: 20px; }
+    .card-title { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 20px; }
+
+    /* アバター */
+    .avatar-section { display: flex; align-items: center; gap: 20px; margin-bottom: 24px; }
+    .avatar-img { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); }
+    .avatar-initials { width: 72px; height: 72px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .avatar-info { flex: 1; }
+    .avatar-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .avatar-role { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+    .role-owner  { color: #b07d00; } [data-theme="dark"] .role-owner { color: #efb46c; }
+    .role-admin  { color: var(--accent); }
+    .role-editor { color: #2a9d6f; } [data-theme="dark"] .role-editor { color: #6cefb0; }
+    .role-viewer { color: var(--text-muted); }
+    .avatar-source { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    /* フォーム */
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    label { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+    input { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font); font-size: 14px; padding: 11px 14px; outline: none; width: 100%; transition: border-color 0.15s; }
+    input:focus { border-color: var(--accent); }
+    input:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn { border: none; border-radius: 8px; cursor: pointer; font-family: var(--font); font-size: 14px; font-weight: 600; padding: 11px 20px; transition: background 0.15s; }
+    .btn-primary { background: var(--accent); color: #fff; width: 100%; }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-google { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); cursor: pointer; font-family: var(--font); font-size: 14px; padding: 11px 16px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; transition: border-color 0.15s; }
+    .btn-google:hover { border-color: var(--accent); }
+    .btn-unlink { background: rgba(214,59,59,0.08); border: 1px solid rgba(214,59,59,0.25); border-radius: 8px; color: var(--error); cursor: pointer; font-family: var(--font); font-size: 14px; padding: 11px 16px; width: 100%; transition: background 0.15s; }
+    .btn-unlink:hover { background: rgba(214,59,59,0.18); }
+
+    /* メッセージ */
+    .msg { font-size: 13px; padding: 11px 14px; border-radius: 8px; margin-top: 12px; display: none; }
+    .msg.success { background: rgba(42,157,111,0.1); border: 1px solid rgba(42,157,111,0.3); color: var(--success); display: block; }
+    .msg.error   { background: rgba(214,59,59,0.1); border: 1px solid rgba(214,59,59,0.3); color: var(--error); display: block; }
+
+    /* 連携状態バッジ */
+    .provider-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .provider-row:last-child { border-bottom: none; }
+    .provider-name { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; }
+    .badge-linked   { background: rgba(42,157,111,0.1); border: 1px solid rgba(42,157,111,0.3); border-radius: 5px; color: var(--success); font-size: 11px; font-weight: 700; padding: 3px 8px; }
+    .badge-unlinked { background: var(--bg); border: 1px solid var(--border); border-radius: 5px; color: var(--text-muted); font-size: 11px; font-weight: 700; padding: 3px 8px; }
+
+    .danger-zone { border-color: rgba(214,59,59,0.3); }
+    .btn-logout { background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted); cursor: pointer; font-family: var(--font); font-size: 14px; padding: 11px; width: 100%; transition: border-color 0.15s, color 0.15s; }
+    .btn-logout:hover { border-color: var(--error); color: var(--error); }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="nav-logo" href="/"><span>D</span>asopedia</a>
+    <div class="nav-right">
+      <a class="nav-link" href="/">ホーム</a>
+      <button class="tb" id="theme-toggle" onclick="window.themeToggle()">🌙</button>
+      <a class="nav-link" href="#" onclick="doLogout()">ログアウト</a>
+    </div>
+  </nav>
+
+  <div class="main">
+    <h1>アカウント設定</h1>
+
+    <!-- プロフィール -->
+    <div class="card">
+      <div class="card-title">プロフィール</div>
+      <div class="avatar-section">
+        <div id="avatar-el"></div>
+        <div class="avatar-info">
+          <div class="avatar-name" id="profile-name">読み込み中...</div>
+          <div id="profile-role"></div>
+          <div class="avatar-source" id="avatar-source"></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>表示名</label>
+        <input type="text" id="displayName" placeholder="表示名">
+      </div>
+      <div class="field">
+        <label>メールアドレス</label>
+        <input type="email" id="email" disabled>
+      </div>
+      <button class="btn btn-primary" onclick="saveProfile()">保存する</button>
+      <div class="msg" id="profile-msg"></div>
+    </div>
+
+    <!-- 外部連携 -->
+    <div class="card">
+      <div class="card-title">外部アカウント連携</div>
+      <div id="providers-list">読み込み中...</div>
+      <div class="msg" id="link-msg"></div>
+    </div>
+
+    <!-- ログアウト -->
+    <div class="card danger-zone">
+      <div class="card-title">その他</div>
+      <button class="btn-logout" onclick="doLogout()">このデバイスからログアウト</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { toggleTheme, updateToggleButton } from 'https://dasopedia.f5.si/js/theme.js';
+    import { requireAuth, logout } from 'https://dasopedia.f5.si/js/auth.js';
+    import { auth, rtdb } from 'https://dasopedia.f5.si/js/firebase.js';
+    import {
+      updateProfile, updateEmail,
+      GoogleAuthProvider,
+      linkWithPopup, unlink
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { ref, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    window.themeToggle = toggleTheme;
+    window.doLogout = logout;
+    updateToggleButton();
+
+    let currentUser;
+
+    function showMsg(id, text, type) {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.className = `msg ${type}`;
+    }
+
+    function renderAvatar(user) {
+      const el = document.getElementById('avatar-el');
+      if (user.photoURL) {
+        el.innerHTML = `<img class="avatar-img" src="${user.photoURL}" alt="アバター" referrerpolicy="no-referrer">`;
+        document.getElementById('avatar-source').textContent = 'Googleアカウントの画像を使用中';
+      } else {
+        const initial = (user.displayName || user.email || '?').charAt(0).toUpperCase();
+        el.innerHTML = `<div class="avatar-initials">${initial}</div>`;
+        document.getElementById('avatar-source').textContent = 'イニシャルアバター';
+      }
+    }
+
+    function renderProviders(user) {
+      const linked = user.providerData.map(p => p.providerId);
+      const providers = [
+        { id: 'google.com', name: 'Google', icon: '<svg width="16" height="16" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>' },
+      ];
+
+      document.getElementById('providers-list').innerHTML = providers.map(p => {
+        const isLinked = linked.includes(p.id);
+        // メール+パスワードのみの場合、唯一の認証手段なのでunlink不可
+        const canUnlink = isLinked && linked.length > 1;
+        return `<div class="provider-row">
+          <div class="provider-name">${p.icon} ${p.name}</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="${isLinked ? 'badge-linked' : 'badge-unlinked'}">${isLinked ? '連携済み' : '未連携'}</span>
+            ${isLinked
+              ? (canUnlink ? `<button class="btn-unlink" style="width:auto;padding:5px 12px;font-size:12px" onclick="unlinkProvider('${p.id}')">解除</button>` : '')
+              : `<button class="btn-google" style="width:auto;padding:5px 12px;font-size:12px" onclick="linkProvider('${p.id}')">連携する</button>`
+            }
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    window.saveProfile = async function() {
+      const name  = document.getElementById('displayName').value.trim();
+      if (!name) { showMsg('profile-msg', '表示名を入力してください。', 'error'); return; }
+      try {
+        await updateProfile(currentUser, { displayName: name });
+        await update(ref(rtdb, `users/${currentUser.uid}`), { displayName: name });
+        document.getElementById('profile-name').textContent = name;
+        renderAvatar({ ...currentUser, displayName: name });
+        showMsg('profile-msg', '保存しました！', 'success');
+      } catch (e) {
+        showMsg('profile-msg', `エラー: ${e.message}`, 'error');
+      }
+    };
+
+    window.linkProvider = async function(providerId) {
+      try {
+        if (providerId === 'google.com') {
+          await linkWithPopup(currentUser, new GoogleAuthProvider());
+          showMsg('link-msg', 'Googleアカウントを連携しました！', 'success');
+          renderProviders(currentUser);
+          renderAvatar(currentUser);
+          document.getElementById('avatar-source').textContent = 'Googleアカウントの画像を使用中';
+        }
+      } catch (e) {
+        if (e.code !== 'auth/popup-closed-by-user') showMsg('link-msg', `連携エラー: ${e.message}`, 'error');
+      }
+    };
+
+    window.unlinkProvider = async function(providerId) {
+      if (!confirm('このアカウント連携を解除しますか？')) return;
+      try {
+        await unlink(currentUser, providerId);
+        showMsg('link-msg', '連携を解除しました。', 'success');
+        renderProviders(currentUser);
+        renderAvatar(currentUser);
+      } catch (e) {
+        showMsg('link-msg', `解除エラー: ${e.message}`, 'error');
+      }
+    };
+
+    requireAuth(async (user, userData) => {
+      currentUser = auth.currentUser;
+      renderAvatar(currentUser);
+      renderProviders(currentUser);
+
+      document.getElementById('profile-name').textContent = userData.displayName || currentUser.displayName || '-';
+      document.getElementById('displayName').value = userData.displayName || currentUser.displayName || '';
+      document.getElementById('email').value = currentUser.email || '';
+
+      const roleEl = document.getElementById('profile-role');
+      roleEl.textContent = userData.role || 'viewer';
+      roleEl.className = `avatar-role role-${userData.role}`;
+    });
+  </script>
+</body>
+</html>

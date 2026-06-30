@@ -149,6 +149,13 @@
     updateToggleButton();
     window.openModal  = () => document.getElementById('modal').classList.add('open');
     window.closeModal = () => document.getElementById('modal').classList.remove('open');
+    window.openInviteModal = () => {
+      document.getElementById('invite-modal').classList.add('open');
+    };
+    
+    window.closeInviteModal = () => {
+      document.getElementById('invite-modal').classList.remove('open');
+    };
 
     const ROLES = ['admin', 'editor', 'viewer', 'banned'];
     let myRole = '';

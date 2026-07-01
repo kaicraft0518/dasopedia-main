@@ -1,1 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>規約への同意 — Dasopedia</title>
+  <script>(function() { const t = localStorage.getItem('dasopedia-theme') || 'light'; document.documentElement.setAttribute('data-theme', t); })();</script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    [data-theme="light"] { --bg: #f5f6fa; --surface: #ffffff; --border: #e2e4ed; --accent: #4f6de0; --accent-hover: #3d5acc; --text: #1a1d2e; --text-muted: #6b7080; --font: 'Inter', 'Hiragino Sans', sans-serif; }
+    [data-theme="dark"]  { --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3e; --accent: #6c8bef; --accent-hover: #8aa3f5; --text: #e8eaf0; --text-muted: #7b7f96; --font: 'Inter', 'Hiragino Sans', sans-serif; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 48px 40px; width: 100%; max-width: 480px; }
+    .logo { font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 32px; }
+    h1 { font-size: 22px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; line-height: 1.6; }
+    .doc-preview { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 24px; max-height: 240px; overflow-y: auto; }
+    .doc-preview h3 { font-size: 13px; font-weight: 700; margin-bottom: 10px; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; }
+    .doc-preview p { font-size: 13px; line-height: 1.7; color: var(--text-muted); margin-bottom: 8px; }
+    .doc-links { display: flex; gap: 16px; margin-bottom: 24px; }
+    .doc-link { color: var(--accent); font-size: 13px; text-decoration: none; }
+    .doc-link:hover { text-decoration: underline; }
+    .checkbox-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 24px; cursor: pointer; }
+    .checkbox-row input[type="checkbox"] { width: 18px; height: 18px; margin-top: 1px; cursor: pointer; accent-color: var(--accent); flex-shrink: 0; }
+    .checkbox-label { font-size: 14px; line-height: 1.5; }
+    .checkbox-label a { color: var(--accent); text-decoration: none; }
+    .checkbox-label a:hover { text-decoration: underline; }
+    .btn { background: var(--accent); border: none; border-radius: 8px; color: #fff; cursor: pointer; font-family: var(--font); font-size: 14px; font-weight: 600; padding: 13px; width: 100%; transition: background 0.15s; }
+    .btn:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .logout-link { display: block; text-align: center; margin-top: 16px; color: var(--text-muted); font-size: 13px; text-decoration: none; }
+    .logout-link:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">Dasopedia</div>
+    <h1>規約への同意</h1>
+    <p class="subtitle">利用規約・プライバシーポリシーが更新されました。続けて利用するには同意が必要です。</p>
 
+    <div class="doc-preview">
+      <h3>利用規約（要約）</h3>
+      <p>本サービスは招待制のプライベートWikiです。禁止事項（法令違反・他者の権利侵害・虚偽情報の投稿など）に違反した場合、利用停止となる場合があります。投稿コンテンツの著作権はユーザーに帰属しますが、サービス運営のために必要な範囲で利用できます。</p>
+      <h3 style="margin-top:14px">プライバシーポリシー（要約）</h3>
+      <p>メールアドレス・表示名・投稿コンテンツを収集します。Firebase（Google LLC）上に保管され、第三者への提供はありません。Googleアカウント連携時にプロフィール画像を取得します。</p>
+    </div>
+
+    <div class="doc-links">
+      <a class="doc-link" href="/legal/" target="_blank">利用規約を読む ↗</a>
+      <a class="doc-link" href="/legal/privacy/" target="_blank">プライバシーポリシーを読む ↗</a>
+    </div>
+
+    <label class="checkbox-row">
+      <input type="checkbox" id="agree-check" onchange="document.getElementById('agreeBtn').disabled = !this.checked">
+      <span class="checkbox-label">
+        <a href="/legal/" target="_blank">利用規約</a>および
+        <a href="/legal/privacy/" target="_blank">プライバシーポリシー</a>を読み、内容に同意します
+      </span>
+    </label>
+
+    <button class="btn" id="agreeBtn" disabled onclick="doAgree()">同意して続ける</button>
+    <a class="logout-link" href="#" onclick="doLogout()">同意せずログアウト</a>
+  </div>
+
+  <script type="module">
+    import { auth, rtdb } from 'https://dasopedia.f5.si/js/firebase.js';
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { ref, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { toggleTheme, updateToggleButton } from 'https://dasopedia.f5.si/js/theme.js';
+
+    const AGREE_VERSION = '1.0';
+
+    // 未ログインならloginへ
+    onAuthStateChanged(auth, user => {
+      if (!user) window.location.href = '/login/';
+    });
+
+    window.doAgree = async function() {
+      const btn = document.getElementById('agreeBtn');
+      btn.disabled = true;
+      btn.textContent = '処理中...';
+      try {
+        const user = auth.currentUser;
+        await update(ref(rtdb, `users/${user.uid}`), {
+          agreedVersion: AGREE_VERSION,
+          agreedAt: Date.now()
+        });
+        // 元のページに戻る（なければメインへ）
+        const redirect = sessionStorage.getItem('agreeRedirect') || '/';
+        sessionStorage.removeItem('agreeRedirect');
+        window.location.href = redirect;
+      } catch (e) {
+        btn.disabled = false;
+        btn.textContent = '同意して続ける';
+        alert(`エラーが発生しました: ${e.message}`);
+      }
+    };
+
+    window.doLogout = async function() {
+      await signOut(auth);
+      window.location.href = '/login/';
+    };
+  </script>
+</body>
+</html>

@@ -75,6 +75,60 @@
     .toast.show { display: block; }
     .toast.success { border-color: rgba(108,239,176,0.4); color: var(--success); }
     .toast.error { border-color: rgba(239,108,108,0.4); color: var(--error); }
+
+
+    @media (max-width: 640px) {
+      .editor-area { flex-direction: column; }
+      .editor-left { border-right: none; border-bottom: 1px solid var(--border); max-height: 50vh; }
+      .editor-right { max-height: 40vh; overflow-y: auto; padding: 16px; }
+      textarea { min-height: 200px; }
+      .toolbar { gap: 2px; padding: 6px 8px; }
+      .tb-btn { font-size: 11px; padding: 3px 6px; }
+      .nav-center { display: none; }
+    }
+    /* ===== レスポンシブ ===== */
+    @media (max-width: 640px) {
+      nav { padding: 0 16px; height: auto; min-height: 56px; flex-wrap: wrap; gap: 0; }
+      .nav-right { gap: 8px; }
+      .nav-search { width: 120px; }
+      .main { padding: 24px 16px; }
+      .hero h1 { font-size: 26px; }
+      .hero-sub { font-size: 14px; }
+      .stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .menu-grid { grid-template-columns: 1fr; }
+      .filters { flex-direction: column; }
+      .meta-row { flex-direction: column; }
+      .search-row { flex-direction: column; }
+      .detail-fields { grid-template-columns: 1fr; }
+      .article-grid { gap: 8px; }
+      .article-card { padding: 14px 16px; }
+      table { font-size: 12px; display: block; overflow-x: auto; }
+      th, td { padding: 8px 10px; white-space: nowrap; }
+      .card { padding: 28px 20px; }
+      .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .page-header > div { width: 100%; }
+      .page-header > div button { width: 100%; }
+      h1 { font-size: 20px; }
+      .doc-nav ol { gap: 4px; }
+    }
+
+    /* ハンバーガーメニュー */
+    #hamburger { display: none; }
+    @media (max-width: 640px) {
+      #hamburger { display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--border); border-radius: 7px; color: var(--text); cursor: pointer; font-size: 18px; padding: 5px 10px; margin-left: auto; }
+      #nav-menu {
+        display: none; flex-direction: column; align-items: flex-start;
+        position: absolute; top: 56px; left: 0; right: 0;
+        background: var(--surface); border-bottom: 1px solid var(--border);
+        padding: 4px 0; z-index: 300; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      }
+      #nav-menu.open { display: flex; }
+      #nav-menu > * { width: 100% !important; padding: 12px 20px !important; border-radius: 0 !important; border-left: none !important; border-right: none !important; border-top: none !important; border-bottom: 1px solid var(--border) !important; font-size: 14px !important; text-align: left; box-sizing: border-box; }
+      #nav-menu > *:last-child { border-bottom: none !important; }
+      #nav-menu .btn-sm { background: none !important; color: var(--accent) !important; }
+      #nav-menu .avatar-wrap { padding: 8px 20px !important; }
+      #nav-menu .avatar-dropdown { position: static !important; box-shadow: none !important; border: none !important; padding: 0 !important; }
+    }
   </style>
   <!-- テーマ初期化（ちらつき防止のため最初に実行） -->
   <script>
@@ -88,7 +142,8 @@
   <nav>
     <a class="nav-logo" href="/"><span>D</span>asopedia</a>
     <div class="nav-center" id="nav-mode">新規作成</div>
-    <div class="nav-right">
+    <button id="hamburger" onclick="toggleNav()">☰</button>
+    <div id="nav-menu">
       <button id="theme-toggle" onclick="window.themeToggle()" title="テーマ切り替え" style="background:none;border:1px solid var(--border);border-radius:7px;color:var(--text);cursor:pointer;font-size:15px;padding:5px 10px;transition:border-color 0.15s;">🌙</button>
       <a class="btn-cancel" href="/">ホーム</a>
       <a class="btn-cancel" href="/wiki/">キャンセル</a>

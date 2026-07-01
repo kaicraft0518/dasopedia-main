@@ -52,6 +52,37 @@
     #done-state .check { font-size: 48px; margin-bottom: 16px; }
     #done-state p { color: var(--text-muted); font-size: 14px; line-height: 1.8; }
     #done-state a { color: var(--accent); text-decoration: none; font-weight: 600; }
+
+    /* ===== レスポンシブ ===== */
+    @media (max-width: 640px) {
+      nav { padding: 0 16px; height: auto; min-height: 56px; flex-wrap: wrap; gap: 0; }
+      .nav-right { gap: 8px; }
+      .nav-search { width: 120px; }
+      .main { padding: 24px 16px; }
+      .hero h1 { font-size: 26px; }
+      .hero-sub { font-size: 14px; }
+      .stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .menu-grid { grid-template-columns: 1fr; }
+      .filters { flex-direction: column; }
+      .meta-row { flex-direction: column; }
+      .search-row { flex-direction: column; }
+      .detail-fields { grid-template-columns: 1fr; }
+      .article-grid { gap: 8px; }
+      .article-card { padding: 14px 16px; }
+      table { font-size: 12px; display: block; overflow-x: auto; }
+      th, td { padding: 8px 10px; white-space: nowrap; }
+      .card { padding: 28px 20px; }
+      .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .page-header > div { width: 100%; }
+      .page-header > div button { width: 100%; }
+      h1 { font-size: 20px; }
+      .doc-nav ol { gap: 4px; }
+    }
+
+    @media (max-width: 480px) {
+      .card { padding: 32px 20px; margin: 12px; }
+      h1 { font-size: 20px; }
+    }
   </style>
   <!-- テーマ初期化（ちらつき防止のため最初に実行） -->
   <script>

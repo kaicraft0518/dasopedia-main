@@ -55,6 +55,12 @@
     .message.error { background: rgba(239,108,108,0.12); border: 1px solid rgba(239,108,108,0.3); color: var(--error); display: block; }
     #field-displayName { display: none; }
     #field-inviteCode { display: none; }
+    #field-agree { display: none; }
+    .agree-row { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+    .agree-row input[type="checkbox"] { width: 16px; height: 16px; margin-top: 2px; accent-color: var(--accent); flex-shrink: 0; cursor: pointer; }
+    .agree-label { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+    .agree-label a { color: var(--accent); text-decoration: none; }
+    .agree-label a:hover { text-decoration: underline; }
   </style>
   <!-- テーマ初期化（ちらつき防止のため最初に実行） -->
   <script>
@@ -81,6 +87,15 @@
       <div class="field" id="field-inviteCode">
         <label>招待コード</label>
         <input type="text" id="inviteCode" placeholder="招待コードを入力" autocomplete="off" style="font-family:monospace;letter-spacing:0.08em">
+      </div>
+      <div class="field" id="field-agree">
+        <label class="agree-row">
+          <input type="checkbox" id="agree-check">
+          <span class="agree-label">
+            <a href="/legal/" target="_blank">利用規約</a>および
+            <a href="/legal/privacy/" target="_blank">プライバシーポリシー</a>に同意する
+          </span>
+        </label>
       </div>
       <div class="field">
         <label>メールアドレス</label>
@@ -121,6 +136,7 @@
       });
       document.getElementById('field-displayName').style.display = tab === 'register' ? 'flex' : 'none';
       document.getElementById('field-inviteCode').style.display = tab === 'register' ? 'flex' : 'none';
+      document.getElementById('field-agree').style.display = tab === 'register' ? 'flex' : 'none';
       btn.textContent = tab === 'login' ? 'ログイン' : 'アカウントを作成';
       msgEl.className = 'message';
     };
@@ -150,6 +166,11 @@
           await ensureUserRecord(cred.user);
         } else {
           if (password.length < 8) { showMsg('パスワードは8文字以上にしてください。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
+          // 同意チェック
+          if (!document.getElementById('agree-check').checked) {
+            showMsg('利用規約・プライバシーポリシーへの同意が必要です。');
+            btn.disabled = false; btn.textContent = 'アカウントを作成'; return;
+          }
           // 招待コード検証
           const inviteCode = document.getElementById('inviteCode').value.trim();
           if (!inviteCode) { showMsg('招待コードを入力してください。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
@@ -161,7 +182,7 @@
 
           const cred = await createUserWithEmailAndPassword(auth, email, password);
           await updateProfile(cred.user, { displayName });
-          await set(ref(rtdb, `users/${cred.user.uid}`), { displayName, email, role: invite.role || 'viewer', createdAt: Date.now() });
+          await set(ref(rtdb, `users/${cred.user.uid}`), { displayName, email, role: invite.role || 'viewer', createdAt: Date.now(), agreedVersion: '1.0', agreedAt: Date.now() });
           // 招待コードを使用済みにする
           await set(ref(rtdb, `invites/${inviteCode}/usedBy`), cred.user.uid);
           await set(ref(rtdb, `invites/${inviteCode}/usedAt`), Date.now());

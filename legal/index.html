@@ -1,1 +1,136 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>利用規約 — Dasopedia</title>
+  <script>(function() { const t = localStorage.getItem('dasopedia-theme') || 'light'; document.documentElement.setAttribute('data-theme', t); })();</script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    [data-theme="light"] { --bg: #f5f6fa; --surface: #ffffff; --border: #e2e4ed; --accent: #4f6de0; --text: #1a1d2e; --text-muted: #6b7080; --font: 'Inter', 'Hiragino Sans', sans-serif; }
+    [data-theme="dark"]  { --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3e; --accent: #6c8bef; --text: #e8eaf0; --text-muted: #7b7f96; --font: 'Inter', 'Hiragino Sans', sans-serif; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+    nav { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 56px; position: sticky; top: 0; z-index: 100; }
+    .nav-logo { font-size: 16px; font-weight: 700; color: var(--text); text-decoration: none; }
+    .nav-logo span { color: var(--accent); }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .nav-link { color: var(--text-muted); font-size: 13px; text-decoration: none; }
+    .nav-link:hover { color: var(--text); }
+    .tb { background: none; border: 1px solid var(--border); border-radius: 7px; color: var(--text); cursor: pointer; font-size: 15px; padding: 5px 10px; }
+    .main { max-width: 760px; margin: 0 auto; padding: 48px 24px; }
+    .doc-header { margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+    .doc-label { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+    h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 8px; }
+    .doc-meta { font-size: 13px; color: var(--text-muted); }
+    .doc-nav { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 36px; }
+    .doc-nav-title { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
+    .doc-nav ol { padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+    .doc-nav a { color: var(--accent); font-size: 13px; text-decoration: none; }
+    .doc-nav a:hover { text-decoration: underline; }
+    .section { margin-bottom: 36px; }
+    h2 { font-size: 17px; font-weight: 700; margin-bottom: 12px; padding-top: 8px; }
+    p { font-size: 14px; line-height: 1.85; color: var(--text); margin-bottom: 10px; }
+    ul, ol { padding-left: 22px; margin-bottom: 10px; }
+    li { font-size: 14px; line-height: 1.85; margin-bottom: 4px; }
+    .other-links { display: flex; gap: 12px; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .other-link { color: var(--accent); font-size: 13px; text-decoration: none; }
+    .other-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="nav-logo" href="/"><span>D</span>asopedia</a>
+    <div class="nav-right">
+      <a class="nav-link" href="/legal/privacy/">プライバシーポリシー</a>
+      <button class="tb" id="theme-toggle" onclick="window.themeToggle()">🌙</button>
+      <a class="nav-link" href="/">ホーム</a>
+    </div>
+  </nav>
 
+  <div class="main">
+    <div class="doc-header">
+      <div class="doc-label">Legal</div>
+      <h1>利用規約</h1>
+      <div class="doc-meta">最終更新日：2025年7月1日　／　バージョン 1.0</div>
+    </div>
+
+    <div class="doc-nav">
+      <div class="doc-nav-title">目次</div>
+      <ol>
+        <li><a href="#s1">サービスについて</a></li>
+        <li><a href="#s2">利用資格</a></li>
+        <li><a href="#s3">アカウント</a></li>
+        <li><a href="#s4">禁止事項</a></li>
+        <li><a href="#s5">コンテンツ</a></li>
+        <li><a href="#s6">免責事項</a></li>
+        <li><a href="#s7">規約の変更</a></li>
+        <li><a href="#s8">お問い合わせ</a></li>
+      </ol>
+    </div>
+
+    <div class="section" id="s1">
+      <h2>第1条　サービスについて</h2>
+      <p>Dasopedia（以下「本サービス」）は、招待制のプライベートWikiサービスです。運営者（以下「当運営」）が定める本規約に同意した方のみご利用いただけます。</p>
+    </div>
+
+    <div class="section" id="s2">
+      <h2>第2条　利用資格</h2>
+      <p>本サービスは招待コードを持つ方のみ新規登録が可能です。以下に該当する場合、利用をお断りする場合があります。</p>
+      <ul>
+        <li>本規約に違反した、または違反するおそれがある場合</li>
+        <li>過去に本サービスの利用を停止されたことがある場合</li>
+        <li>その他、当運営が不適切と判断した場合</li>
+      </ul>
+    </div>
+
+    <div class="section" id="s3">
+      <h2>第3条　アカウント</h2>
+      <p>登録したアカウントの管理はご自身の責任で行ってください。パスワードは第三者に開示しないようにしてください。アカウントの不正利用による損害について、当運営は責任を負いません。</p>
+    </div>
+
+    <div class="section" id="s4">
+      <h2>第4条　禁止事項</h2>
+      <p>本サービスにおいて、以下の行為を禁止します。</p>
+      <ul>
+        <li>法令または公序良俗に違反する行為</li>
+        <li>他のユーザーや第三者の権利を侵害する行為</li>
+        <li>虚偽の情報を投稿・記録する行為</li>
+        <li>本サービスのシステムに不正にアクセスする行為</li>
+        <li>当運営が不適切と判断するその他の行為</li>
+      </ul>
+    </div>
+
+    <div class="section" id="s5">
+      <h2>第5条　コンテンツ</h2>
+      <p>ユーザーが投稿・記録したコンテンツの著作権はそのユーザーに帰属します。ただし、当運営はサービスの運営・改善のために必要な範囲でコンテンツを利用できるものとします。</p>
+      <p>他者の著作権・肖像権・プライバシーを侵害するコンテンツの投稿は禁止します。</p>
+    </div>
+
+    <div class="section" id="s6">
+      <h2>第6条　免責事項</h2>
+      <p>当運営は、本サービスの内容の正確性・完全性・有用性について保証しません。本サービスの利用によって生じたいかなる損害についても、当運営は責任を負いません。</p>
+      <p>システムメンテナンスや障害により、予告なくサービスを停止する場合があります。</p>
+    </div>
+
+    <div class="section" id="s7">
+      <h2>第7条　規約の変更</h2>
+      <p>当運営は必要に応じて本規約を変更できます。変更後の規約はサービス上に掲示した時点から効力を持ちます。変更後も本サービスを利用し続けた場合、変更後の規約に同意したものとみなします。</p>
+    </div>
+
+    <div class="section" id="s8">
+      <h2>第8条　お問い合わせ</h2>
+      <p>本規約に関するお問い合わせは、サービス内の管理者までご連絡ください。</p>
+    </div>
+
+    <div class="other-links">
+      <a class="other-link" href="/legal/privacy/">プライバシーポリシー →</a>
+    </div>
+  </div>
+
+  <script type="module">
+    import { toggleTheme, updateToggleButton } from 'https://dasopedia.f5.si/js/theme.js';
+    window.themeToggle = toggleTheme;
+    updateToggleButton();
+  </script>
+</body>
+</html>

@@ -40,7 +40,7 @@
     .nav-link { color: var(--text-muted); font-size: 13px; text-decoration: none; }
     .nav-link:hover { color: var(--text); }
     .btn-sm { background: var(--accent); border: none; border-radius: 7px; color: #fff; cursor: pointer; font-family: var(--font); font-size: 13px; font-weight: 600; padding: 7px 14px; text-decoration: none; }
-    .main { max-width: 800px; margin: 0 auto; padding: 48px 24px; }
+    .main { max-width: 800px; margin: 0 auto; padding: 48px 24px; flex: 1; }
     .breadcrumb { font-size: 12px; color: var(--text-muted); margin-bottom: 24px; }
     .breadcrumb a { color: var(--accent); text-decoration: none; }
     .article-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
@@ -225,5 +225,13 @@
       }
     });
   </script>
+
+  <footer style="border-top:1px solid var(--border);margin-top:auto;padding:24px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <span style="font-size:12px;color:var(--text-muted)">© Dasopedia</span>
+    <div style="display:flex;gap:16px">
+      <a href="/legal/" style="font-size:12px;color:var(--text-muted);text-decoration:none" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'">利用規約</a>
+      <a href="/legal/privacy/" style="font-size:12px;color:var(--text-muted);text-decoration:none" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'">プライバシーポリシー</a>
+    </div>
+  </footer>
 </body>
 </html>

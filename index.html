@@ -31,7 +31,7 @@
       --success: #6cefb0;
       --font: 'Inter', 'Hiragino Sans', sans-serif;
     }
-    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; display: flex; flex-direction: column; }
     nav { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 32px; height: 56px; position: sticky; top: 0; z-index: 100; }
     .nav-logo { font-size: 16px; font-weight: 700; color: var(--text); text-decoration: none; letter-spacing: -0.02em; flex-shrink: 0; }
     .nav-logo span { color: var(--accent); }
@@ -42,7 +42,7 @@
     .nav-link:hover { color: var(--text); }
     .btn-sm { background: var(--accent); border: none; border-radius: 7px; color: #fff; cursor: pointer; font-family: var(--font); font-size: 13px; font-weight: 600; padding: 7px 14px; text-decoration: none; transition: background 0.15s; }
     .btn-sm:hover { background: var(--accent-hover); }
-    .main { max-width: 900px; margin: 0 auto; padding: 48px 24px; }
+    .main { max-width: 900px; margin: 0 auto; padding: 48px 24px; flex: 1; }
     .hero { margin-bottom: 48px; }
     .hero h1 { font-size: 36px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 4px; }
     .hero-sub { font-size: 16px; color: var(--text-muted); margin-bottom: 8px; }
@@ -189,6 +189,7 @@
             <div class="dropdown-role" id="dropdown-role">...</div>
           </div>
           <a class="dropdown-item" href="/accounts/">アカウント設定</a>
+          <a class="dropdown-item" href="/admin/" id="admin-link" style="display:none">管理パネル</a>
           <hr class="dropdown-divider">
           <button class="dropdown-item danger" onclick="doLogout()">ログアウト</button>
         </div>
@@ -235,6 +236,9 @@
       document.getElementById('avatar').textContent = name.charAt(0).toUpperCase();
       document.getElementById('dropdown-name').textContent = name;
       document.getElementById('dropdown-role').textContent = userData.role || 'viewer';
+      if (['owner','admin'].includes(userData.role)) {
+        document.getElementById('admin-link').style.display = 'block';
+      }
       try {
         const q = query(collection(db, 'articles'), orderBy('updatedAt', 'desc'), limit(10));
         const snap = await getDocs(q);
@@ -259,5 +263,13 @@
       }
     });
   </script>
+
+  <footer style="border-top:1px solid var(--border);margin-top:auto;padding:24px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <span style="font-size:12px;color:var(--text-muted)">© Dasopedia</span>
+    <div style="display:flex;gap:16px">
+      <a href="/legal/" style="font-size:12px;color:var(--text-muted);text-decoration:none" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'">利用規約</a>
+      <a href="/legal/privacy/" style="font-size:12px;color:var(--text-muted);text-decoration:none" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'">プライバシーポリシー</a>
+    </div>
+  </footer>
 </body>
 </html>

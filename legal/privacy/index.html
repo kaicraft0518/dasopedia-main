@@ -1,1 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>プライバシーポリシー — Dasopedia</title>
+  <script>(function() { const t = localStorage.getItem('dasopedia-theme') || 'light'; document.documentElement.setAttribute('data-theme', t); })();</script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    [data-theme="light"] { --bg: #f5f6fa; --surface: #ffffff; --border: #e2e4ed; --accent: #4f6de0; --text: #1a1d2e; --text-muted: #6b7080; --font: 'Inter', 'Hiragino Sans', sans-serif; }
+    [data-theme="dark"]  { --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3e; --accent: #6c8bef; --text: #e8eaf0; --text-muted: #7b7f96; --font: 'Inter', 'Hiragino Sans', sans-serif; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+    nav { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 56px; position: sticky; top: 0; z-index: 100; }
+    .nav-logo { font-size: 16px; font-weight: 700; color: var(--text); text-decoration: none; }
+    .nav-logo span { color: var(--accent); }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .nav-link { color: var(--text-muted); font-size: 13px; text-decoration: none; }
+    .nav-link:hover { color: var(--text); }
+    .tb { background: none; border: 1px solid var(--border); border-radius: 7px; color: var(--text); cursor: pointer; font-size: 15px; padding: 5px 10px; }
+    .main { max-width: 760px; margin: 0 auto; padding: 48px 24px; }
+    .doc-header { margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+    .doc-label { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+    h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 8px; }
+    .doc-meta { font-size: 13px; color: var(--text-muted); }
+    .doc-nav { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 36px; }
+    .doc-nav-title { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
+    .doc-nav ol { padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+    .doc-nav a { color: var(--accent); font-size: 13px; text-decoration: none; }
+    .doc-nav a:hover { text-decoration: underline; }
+    .section { margin-bottom: 36px; }
+    h2 { font-size: 17px; font-weight: 700; margin-bottom: 12px; padding-top: 8px; }
+    p { font-size: 14px; line-height: 1.85; margin-bottom: 10px; }
+    ul { padding-left: 22px; margin-bottom: 10px; }
+    li { font-size: 14px; line-height: 1.85; margin-bottom: 4px; }
+    .info-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+    .info-table th, .info-table td { border: 1px solid var(--border); font-size: 13px; padding: 10px 14px; text-align: left; }
+    .info-table th { background: var(--surface); font-weight: 600; width: 30%; }
+    .other-links { display: flex; gap: 12px; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .other-link { color: var(--accent); font-size: 13px; text-decoration: none; }
+    .other-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="nav-logo" href="/"><span>D</span>asopedia</a>
+    <div class="nav-right">
+      <a class="nav-link" href="/legal/">利用規約</a>
+      <button class="tb" id="theme-toggle" onclick="window.themeToggle()">🌙</button>
+      <a class="nav-link" href="/">ホーム</a>
+    </div>
+  </nav>
 
+  <div class="main">
+    <div class="doc-header">
+      <div class="doc-label">Legal</div>
+      <h1>プライバシーポリシー</h1>
+      <div class="doc-meta">最終更新日：2025年7月1日　／　バージョン 1.0</div>
+    </div>
+
+    <div class="doc-nav">
+      <div class="doc-nav-title">目次</div>
+      <ol>
+        <li><a href="#s1">収集する情報</a></li>
+        <li><a href="#s2">情報の利用目的</a></li>
+        <li><a href="#s3">第三者への提供</a></li>
+        <li><a href="#s4">利用する外部サービス</a></li>
+        <li><a href="#s5">情報の保管</a></li>
+        <li><a href="#s6">Cookieについて</a></li>
+        <li><a href="#s7">ユーザーの権利</a></li>
+        <li><a href="#s8">ポリシーの変更</a></li>
+        <li><a href="#s9">お問い合わせ</a></li>
+      </ol>
+    </div>
+
+    <div class="section" id="s1">
+      <h2>第1条　収集する情報</h2>
+      <p>本サービスでは、以下の情報を収集します。</p>
+      <table class="info-table">
+        <tr><th>情報の種類</th><th>収集方法</th></tr>
+        <tr><td>メールアドレス</td><td>アカウント登録時にご入力いただきます</td></tr>
+        <tr><td>表示名</td><td>アカウント登録時にご入力いただきます</td></tr>
+        <tr><td>プロフィール画像</td><td>Googleアカウント連携時に取得します</td></tr>
+        <tr><td>投稿・編集したコンテンツ</td><td>本サービス利用中に記録されます</td></tr>
+        <tr><td>アクセスログ</td><td>Firebase等の外部サービスにより自動取得されます</td></tr>
+      </table>
+    </div>
+
+    <div class="section" id="s2">
+      <h2>第2条　情報の利用目的</h2>
+      <p>収集した情報は以下の目的で利用します。</p>
+      <ul>
+        <li>本サービスの提供・運営・改善</li>
+        <li>ユーザー認証およびアカウント管理</li>
+        <li>不正利用の検知・防止</li>
+        <li>お問い合わせへの対応</li>
+      </ul>
+    </div>
+
+    <div class="section" id="s3">
+      <h2>第3条　第三者への提供</h2>
+      <p>当運営は、以下の場合を除き、収集した個人情報を第三者に提供しません。</p>
+      <ul>
+        <li>ユーザーご本人の同意がある場合</li>
+        <li>法令に基づく開示が必要な場合</li>
+        <li>人の生命・身体・財産を保護するために必要な場合</li>
+      </ul>
+    </div>
+
+    <div class="section" id="s4">
+      <h2>第4条　利用する外部サービス</h2>
+      <p>本サービスは以下の外部サービスを利用しており、それぞれのプライバシーポリシーが適用されます。</p>
+      <ul>
+        <li><strong>Firebase（Google LLC）</strong>：認証・データベース・ホスティングに使用。<a href="https://firebase.google.com/support/privacy" target="_blank" style="color:var(--accent)">Firebaseプライバシーポリシー</a></li>
+        <li><strong>GitHub Pages（GitHub, Inc.）</strong>：サービスのホスティングに使用。<a href="https://docs.github.com/ja/site-policy/privacy-policies/github-privacy-statement" target="_blank" style="color:var(--accent)">GitHubプライバシーステートメント</a></li>
+        <li><strong>Googleアカウント</strong>：外部ログイン連携に使用。<a href="https://policies.google.com/privacy" target="_blank" style="color:var(--accent)">Googleプライバシーポリシー</a></li>
+      </ul>
+    </div>
+
+    <div class="section" id="s5">
+      <h2>第5条　情報の保管</h2>
+      <p>ユーザー情報はFirebase（Google LLCが提供するクラウドサービス）上に保管されます。データはGoogleのセキュリティ基準に従って管理されます。</p>
+      <p>アカウントを削除した場合、関連するデータは速やかに削除されます。ただし、投稿したコンテンツはサービス上に残る場合があります。</p>
+    </div>
+
+    <div class="section" id="s6">
+      <h2>第6条　Cookieについて</h2>
+      <p>本サービスはFirebase Authenticationによるセッション管理のためにlocalStorageおよびCookieを使用します。これらはサービスの基本機能に必要なものであり、マーケティング目的では使用しません。</p>
+    </div>
+
+    <div class="section" id="s7">
+      <h2>第7条　ユーザーの権利</h2>
+      <p>ユーザーはいつでも以下を要求できます。</p>
+      <ul>
+        <li>自身の個人情報の開示・確認</li>
+        <li>個人情報の訂正・削除</li>
+        <li>アカウントの削除</li>
+      </ul>
+      <p>これらの要求はサービス内の管理者にお問い合わせください。</p>
+    </div>
+
+    <div class="section" id="s8">
+      <h2>第8条　ポリシーの変更</h2>
+      <p>本ポリシーは必要に応じて更新されます。重要な変更がある場合はサービス上でお知らせします。変更後も本サービスを利用し続けた場合、変更後のポリシーに同意したものとみなします。</p>
+    </div>
+
+    <div class="section" id="s9">
+      <h2>第9条　お問い合わせ</h2>
+      <p>本ポリシーに関するお問い合わせは、サービス内の管理者までご連絡ください。</p>
+    </div>
+
+    <div class="other-links">
+      <a class="other-link" href="/legal/">利用規約 →</a>
+    </div>
+  </div>
+
+  <script type="module">
+    import { toggleTheme, updateToggleButton } from 'https://dasopedia.f5.si/js/theme.js';
+    window.themeToggle = toggleTheme;
+    updateToggleButton();
+  </script>
+</body>
+</html>

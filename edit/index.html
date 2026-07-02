@@ -149,6 +149,32 @@
       #nav-menu .btn-sm { background: none !important; color: var(--accent) !important; }
       #nav-menu .avatar-wrap { padding: 8px 20px !important; }
     }
+
+    /* 画像アップロードモーダル */
+    .img-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+    .img-modal-overlay.open { display: flex; }
+    .img-modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 100%; max-width: 420px; }
+    .img-modal-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .img-modal-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 20px; line-height: 1; }
+    .img-drop-zone {
+      border: 2px dashed var(--border); border-radius: 10px; padding: 32px 20px;
+      text-align: center; cursor: pointer; transition: border-color 0.15s, background 0.15s;
+      margin-bottom: 16px;
+    }
+    .img-drop-zone:hover, .img-drop-zone.drag-over { border-color: var(--accent); background: rgba(79,109,224,0.04); }
+    .img-drop-zone input[type="file"] { display: none; }
+    .img-drop-icon { font-size: 32px; margin-bottom: 8px; }
+    .img-drop-text { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+    .img-preview { display: none; margin-bottom: 16px; text-align: center; }
+    .img-preview img { max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid var(--border); }
+    .img-preview-name { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+    .img-alt-input { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font); font-size: 13px; padding: 9px 12px; outline: none; width: 100%; margin-bottom: 12px; transition: border-color 0.15s; }
+    .img-alt-input:focus { border-color: var(--accent); }
+    .img-upload-btn { background: var(--accent); border: none; border-radius: 8px; color: #fff; cursor: pointer; font-family: var(--font); font-size: 14px; font-weight: 600; padding: 11px; width: 100%; transition: background 0.15s; }
+    .img-upload-btn:hover:not(:disabled) { background: var(--accent-hover); }
+    .img-upload-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .img-progress { font-size: 13px; color: var(--text-muted); text-align: center; margin-top: 10px; display: none; }
+    .img-progress.show { display: block; }
   </style>
   <!-- テーマ初期化（ちらつき防止のため最初に実行） -->
   <script>
@@ -156,18 +182,6 @@
       const t = localStorage.getItem('dasopedia-theme') || 'light';
       document.documentElement.setAttribute('data-theme', t);
     })();
-  </script>
-  <script>
-    function toggleNav() {
-      var m = document.getElementById('nav-menu');
-      if (m) m.classList.toggle('open');
-    }
-    document.addEventListener('click', function(e) {
-      if (!e.target.closest('nav')) {
-        var m = document.getElementById('nav-menu');
-        if (m) m.classList.remove('open');
-      }
-    });
   </script>
   <script>
     function toggleNav() {
@@ -214,6 +228,7 @@
         <button class="tb-btn" onclick="insLine('> ')">引用</button>
         <button class="tb-btn" onclick="ins('\n```\n','\n```\n')">```</button>
         <button class="tb-btn" onclick="ins('[','](url)')">リンク</button>
+        <button class="tb-btn" onclick="openImgModal()">🖼 画像</button>
       </div>
       <textarea id="editor" placeholder="Markdown で記事を書く..." oninput="updatePreview()"></textarea>
     </div>
@@ -222,6 +237,32 @@
       <div class="preview-body" id="preview"></div>
     </div>
   </div>
+
+  <!-- 画像アップロードモーダル -->
+  <div class="img-modal-overlay" id="img-modal" onclick="if(event.target===this)closeImgModal()">
+    <div class="img-modal">
+      <div class="img-modal-title">
+        画像を挿入
+        <button class="img-modal-close" onclick="closeImgModal()">✕</button>
+      </div>
+
+      <div class="img-drop-zone" id="img-drop-zone" onclick="document.getElementById('img-file-input').click()" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+        <input type="file" id="img-file-input" accept="image/*" onchange="onFileSelect(event)">
+        <div class="img-drop-icon">📁</div>
+        <div class="img-drop-text">クリックまたはドラッグ＆ドロップで画像を選択<br>PNG・JPG・GIF・WebP 対応</div>
+      </div>
+
+      <div class="img-preview" id="img-preview">
+        <img id="img-preview-img" src="" alt="">
+        <div class="img-preview-name" id="img-preview-name"></div>
+      </div>
+
+      <input class="img-alt-input" id="img-alt" placeholder="画像の説明文（alt）※省略可">
+      <button class="img-upload-btn" id="img-upload-btn" onclick="uploadImage()" disabled>アップロードして挿入</button>
+      <div class="img-progress" id="img-progress"></div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script type="module">
@@ -229,8 +270,9 @@
     window.themeToggle = toggleTheme;
     updateToggleButton();
     import { requireEditor } from 'https://dasopedia.f5.si/js/auth.js';
-    import { db } from 'https://dasopedia.f5.si/js/firebase.js';
+    import { db, rtdb } from 'https://dasopedia.f5.si/js/firebase.js';
     import { collection, doc, getDoc, addDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     let currentUser, currentUserData;
     const params = new URLSearchParams(location.search);
@@ -271,6 +313,138 @@
       ta.value = ta.value.slice(0, lineStart) + prefix + ta.value.slice(lineStart);
       ta.setSelectionRange(s + prefix.length, s + prefix.length);
       ta.focus(); updatePreview();
+    };
+
+
+    // ===== 画像アップロード =====
+    let selectedFile = null;
+    let githubConfig = null;
+
+    async function loadGithubConfig() {
+      if (githubConfig) return githubConfig;
+      try {
+        const snap = await get(ref(rtdb, 'config/github'));
+        if (!snap.exists()) throw new Error('GitHub設定が見つかりません。RTDBのconfig/githubを確認してください。');
+        githubConfig = snap.val();
+        return githubConfig;
+      } catch (e) {
+        throw new Error('GitHub設定の読み込みに失敗しました: ' + e.message);
+      }
+    }
+
+    window.openImgModal = function() {
+      selectedFile = null;
+      document.getElementById('img-preview').style.display = 'none';
+      document.getElementById('img-alt').value = '';
+      document.getElementById('img-upload-btn').disabled = true;
+      document.getElementById('img-progress').className = 'img-progress';
+      document.getElementById('img-progress').textContent = '';
+      document.getElementById('img-file-input').value = '';
+      document.getElementById('img-drop-zone').querySelector('.img-drop-text').textContent = 'クリックまたはドラッグ＆ドロップで画像を選択
+PNG・JPG・GIF・WebP 対応';
+      document.getElementById('img-modal').classList.add('open');
+    };
+    window.closeImgModal = () => document.getElementById('img-modal').classList.remove('open');
+
+    window.onDragOver = function(e) {
+      e.preventDefault();
+      document.getElementById('img-drop-zone').classList.add('drag-over');
+    };
+    window.onDragLeave = function() {
+      document.getElementById('img-drop-zone').classList.remove('drag-over');
+    };
+    window.onDrop = function(e) {
+      e.preventDefault();
+      document.getElementById('img-drop-zone').classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) setFile(file);
+    };
+    window.onFileSelect = function(e) {
+      const file = e.target.files[0];
+      if (file) setFile(file);
+    };
+
+    function setFile(file) {
+      selectedFile = file;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        document.getElementById('img-preview-img').src = ev.target.result;
+        document.getElementById('img-preview-name').textContent = file.name;
+        document.getElementById('img-preview').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+      document.getElementById('img-upload-btn').disabled = false;
+    }
+
+    window.uploadImage = async function() {
+      if (!selectedFile) return;
+      const btn      = document.getElementById('img-upload-btn');
+      const progress = document.getElementById('img-progress');
+      btn.disabled = true;
+      btn.textContent = 'アップロード中...';
+      progress.textContent = 'GitHub設定を読み込み中...';
+      progress.className = 'img-progress show';
+
+      try {
+        const cfg = await loadGithubConfig();
+
+        // ファイル名：タイムスタンプ+元のファイル名でユニーク化
+        const ext      = selectedFile.name.split('.').pop();
+        const safeName = selectedFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const filename = `images/${Date.now()}_${safeName}`;
+        const apiUrl   = `https://api.github.com/repos/${cfg.repo}/contents/${filename}`;
+
+        progress.textContent = '画像を変換中...';
+
+        // Base64エンコード
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(selectedFile);
+        });
+
+        progress.textContent = 'GitHubにアップロード中...';
+
+        const res = await fetch(apiUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${cfg.token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: `Upload image: ${safeName}`,
+            content: base64,
+            branch: cfg.branch || 'main'
+          })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.message || 'アップロードに失敗しました');
+        }
+
+        const data = await res.json();
+        const rawUrl = `https://raw.githubusercontent.com/${cfg.repo}/${cfg.branch || 'main'}/${filename}`;
+        const alt    = document.getElementById('img-alt').value.trim() || safeName;
+        const mdText = `![${alt}](${rawUrl})`;
+
+        // エディタにMarkdownを挿入
+        const ta = document.getElementById('editor');
+        const s  = ta.selectionStart;
+        ta.value = ta.value.slice(0, s) + mdText + ta.value.slice(s);
+        ta.setSelectionRange(s + mdText.length, s + mdText.length);
+        ta.focus();
+        updatePreview();
+
+        showToast('画像をアップロードしました！');
+        closeImgModal();
+      } catch (e) {
+        progress.textContent = `エラー: ${e.message}`;
+        progress.style.color = 'var(--error)';
+        btn.disabled = false;
+        btn.textContent = 'アップロードして挿入';
+      }
     };
 
     window.doSave = async () => {

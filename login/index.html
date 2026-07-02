@@ -209,6 +209,7 @@
           if (!inviteSnap.exists()) { showMsg('招待コードが無効です。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
           const invite = inviteSnap.val();
           if (invite.usedBy) { showMsg('この招待コードは既に使用されています。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
+          if (invite.disabled) { showMsg('この招待コードは無効化されています。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
           if (invite.expiresAt && Date.now() > invite.expiresAt) { showMsg('招待コードの有効期限が切れています。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
 
           const cred = await createUserWithEmailAndPassword(auth, email, password);

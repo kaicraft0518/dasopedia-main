@@ -367,8 +367,7 @@
       document.getElementById('img-progress').textContent = '';
       document.getElementById('img-width').value = '';
       document.getElementById('img-file-input').value = '';
-      document.getElementById('img-drop-zone').querySelector('.img-drop-text').textContent = 'クリックまたはドラッグ＆ドロップで画像を選択
-PNG・JPG・GIF・WebP 対応';
+      document.getElementById('img-drop-zone').querySelector('.img-drop-text').textContent = 'クリックまたはドラッグ＆ドロップで画像を選択\nPNG・JPG・GIF・WebP 対応';
       document.getElementById('img-modal').classList.add('open');
     };
     window.closeImgModal = () => document.getElementById('img-modal').classList.remove('open');
@@ -453,11 +452,12 @@ PNG・JPG・GIF・WebP 対応';
 
         const data = await res.json();
         const rawUrl = `https://raw.githubusercontent.com/${cfg.repo}/${cfg.branch || 'main'}/${filename}`;
-        const alt    = document.getElementById('img-alt').value.trim() || safeName;
-        const width  = document.getElementById('img-width').value.trim();
+        const alt = document.getElementById('img-alt').value.trim() || safeName;
+        const width = document.getElementById('img-width').value.trim();
+        
         const mdText = width
-          ? `<img src="${rawUrl}" alt="${alt}" width="${width}">`
-          : `<img src="${rawUrl}" alt="${alt}">`;
+        ? `<img src="${rawUrl}" alt="${alt}" width="${width}">`
+        : `![${alt}](${rawUrl})`;
 
         // エディタにMarkdownを挿入
         const ta = document.getElementById('editor');

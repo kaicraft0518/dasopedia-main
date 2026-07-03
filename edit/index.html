@@ -229,12 +229,34 @@
         <button class="tb-btn" onclick="ins('\n```\n','\n```\n')">```</button>
         <button class="tb-btn" onclick="ins('[','](url)')">リンク</button>
         <button class="tb-btn" onclick="openImgModal()">🖼 画像</button>
+        <button class="tb-btn" onclick="openResizeModal()">↔ サイズ変更</button>
       </div>
       <textarea id="editor" placeholder="Markdown で記事を書く..." oninput="updatePreview()"></textarea>
     </div>
     <div class="editor-right">
       <div class="preview-label">プレビュー</div>
       <div class="preview-body" id="preview"></div>
+    </div>
+  </div>
+
+
+  <!-- 画像サイズ変更モーダル -->
+  <div class="img-modal-overlay" id="resize-modal" onclick="if(event.target===this)closeResizeModal()">
+    <div class="img-modal">
+      <div class="img-modal-title">
+        画像サイズを変更
+        <button class="img-modal-close" onclick="closeResizeModal()">✕</button>
+      </div>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">カーソルを変更したい <code style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-size:12px">&lt;img&gt;</code> タグの上に置いてから実行してください。</p>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px">
+        <input class="img-alt-input" id="resize-width" type="number" placeholder="新しい幅（px）" min="1" max="9999" style="margin-bottom:0;flex:1">
+        <span style="font-size:13px;color:var(--text-muted);white-space:nowrap">px</span>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button class="img-upload-btn" onclick="applyResize()" style="flex:1">適用</button>
+        <button onclick="removeWidth()" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);cursor:pointer;font-family:var(--font);font-size:14px;padding:11px">幅指定を削除</button>
+      </div>
+      <div id="resize-preview" style="font-size:12px;color:var(--text-muted);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px;font-family:monospace;display:none;word-break:break-all"></div>
     </div>
   </div>
 
@@ -258,6 +280,10 @@
       </div>
 
       <input class="img-alt-input" id="img-alt" placeholder="画像の説明文（alt）※省略可">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <input class="img-alt-input" id="img-width" type="number" placeholder="幅（px）※省略で元サイズ" min="1" max="9999" style="margin-bottom:0;flex:1">
+        <span style="font-size:13px;color:var(--text-muted);white-space:nowrap">px</span>
+      </div>
       <button class="img-upload-btn" id="img-upload-btn" onclick="uploadImage()" disabled>アップロードして挿入</button>
       <div class="img-progress" id="img-progress"></div>
     </div>
@@ -339,11 +365,10 @@
       document.getElementById('img-upload-btn').disabled = true;
       document.getElementById('img-progress').className = 'img-progress';
       document.getElementById('img-progress').textContent = '';
+      document.getElementById('img-width').value = '';
       document.getElementById('img-file-input').value = '';
-      document.getElementById('img-drop-zone')
-      .querySelector('.img-drop-text').textContent =
-      `クリックまたはドラッグ＆ドロップで画像を選択
-      PNG・JPG・GIF・WebP 対応`;
+      document.getElementById('img-drop-zone').querySelector('.img-drop-text').textContent = 'クリックまたはドラッグ＆ドロップで画像を選択
+PNG・JPG・GIF・WebP 対応';
       document.getElementById('img-modal').classList.add('open');
     };
     window.closeImgModal = () => document.getElementById('img-modal').classList.remove('open');
@@ -429,7 +454,10 @@
         const data = await res.json();
         const rawUrl = `https://raw.githubusercontent.com/${cfg.repo}/${cfg.branch || 'main'}/${filename}`;
         const alt    = document.getElementById('img-alt').value.trim() || safeName;
-        const mdText = `![${alt}](${rawUrl})`;
+        const width  = document.getElementById('img-width').value.trim();
+        const mdText = width
+          ? `<img src="${rawUrl}" alt="${alt}" width="${width}">`
+          : `<img src="${rawUrl}" alt="${alt}">`;
 
         // エディタにMarkdownを挿入
         const ta = document.getElementById('editor');
@@ -447,6 +475,72 @@
         btn.disabled = false;
         btn.textContent = 'アップロードして挿入';
       }
+    };
+
+    // ===== 画像サイズ変更 =====
+    window.openResizeModal = function() {
+      document.getElementById('resize-width').value = '';
+      document.getElementById('resize-preview').style.display = 'none';
+      document.getElementById('resize-modal').classList.add('open');
+    };
+    window.closeResizeModal = () => document.getElementById('resize-modal').classList.remove('open');
+
+    function getImgTagAtCursor() {
+      const ta  = document.getElementById('editor');
+      const pos = ta.selectionStart;
+      const val = ta.value;
+      // カーソル位置を含む<img>タグを検索
+      let start = -1, end = -1;
+      // カーソルより前で最後の<imgを探す
+      for (let i = pos; i >= 0; i--) {
+        if (val.slice(i, i + 4) === '<img') { start = i; break; }
+      }
+      if (start === -1) return null;
+      // そのタグの終わり>を探す
+      end = val.indexOf('>', start);
+      if (end === -1) return null;
+      end += 1;
+      // カーソルがタグの範囲内にあるか
+      if (pos > end) return null;
+      return { start, end, tag: val.slice(start, end) };
+    }
+
+    function updateImgTag(newTag) {
+      const ta  = document.getElementById('editor');
+      const img = getImgTagAtCursor();
+      if (!img) { alert('カーソルを <img> タグの上に置いてください。'); return false; }
+      ta.value = ta.value.slice(0, img.start) + newTag + ta.value.slice(img.end);
+      ta.setSelectionRange(img.start, img.start + newTag.length);
+      ta.focus();
+      updatePreview();
+      return true;
+    }
+
+    window.applyResize = function() {
+      const width = document.getElementById('resize-width').value.trim();
+      if (!width) { alert('幅を入力してください。'); return; }
+      const img = getImgTagAtCursor();
+      if (!img) { alert('カーソルを <img> タグの上に置いてください。'); return; }
+      // 既存のwidthを更新 or 追加
+      let newTag = img.tag;
+      if (/width="[^"]*"/.test(newTag)) {
+        newTag = newTag.replace(/width="[^"]*"/, `width="${width}"`);
+      } else {
+        newTag = newTag.replace('<img ', `<img width="${width}" `);
+      }
+      if (updateImgTag(newTag)) {
+        document.getElementById('resize-preview').textContent = newTag;
+        document.getElementById('resize-preview').style.display = 'block';
+        setTimeout(() => closeResizeModal(), 800);
+      }
+    };
+
+    window.removeWidth = function() {
+      const img = getImgTagAtCursor();
+      if (!img) { alert('カーソルを <img> タグの上に置いてください。'); return; }
+      const newTag = img.tag.replace(/\s*width="[^"]*"/, '');
+      updateImgTag(newTag);
+      closeResizeModal();
     };
 
     window.doSave = async () => {

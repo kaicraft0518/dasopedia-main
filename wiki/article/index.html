@@ -130,6 +130,19 @@
       #nav-menu .btn-sm { background: none !important; color: var(--accent) !important; }
       #nav-menu .avatar-wrap { padding: 8px 20px !important; }
     }
+
+    .private-badge { background: rgba(239,180,108,0.12); border: 1px solid rgba(239,180,108,0.3); border-radius: 5px; color: #b07d00; font-size: 11px; font-weight: 700; padding: 3px 8px; letter-spacing: 0.04em; margin-left: 8px; }
+    [data-theme="dark"] .private-badge { color: #efb46c; }
+
+    .share-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+    .share-modal-overlay.open { display: flex; }
+    .share-modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 100%; max-width: 440px; max-height: 80vh; overflow-y: auto; }
+    .share-user-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .share-user-row:last-child { border-bottom: none; }
+    .share-user-info { display: flex; align-items: center; gap: 10px; }
+    .share-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .share-btn-add { background: rgba(79,109,224,0.1); border: 1px solid rgba(79,109,224,0.3); border-radius: 6px; color: var(--accent); cursor: pointer; font-family: var(--font); font-size: 12px; font-weight: 600; padding: 5px 12px; }
+    .share-btn-remove { background: rgba(214,59,59,0.08); border: 1px solid rgba(214,59,59,0.25); border-radius: 6px; color: var(--error); cursor: pointer; font-family: var(--font); font-size: 12px; padding: 5px 12px; }
   </style>
   <!-- テーマ初期化（ちらつき防止のため最初に実行） -->
   <script>
@@ -181,8 +194,67 @@
     window.themeToggle = toggleTheme;
     updateToggleButton();
     import { requireAuth, logout } from 'https://dasopedia.f5.si/js/auth.js';
-    import { db } from 'https://dasopedia.f5.si/js/firebase.js';
-    import { collection, query, where, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { db, rtdb } from 'https://dasopedia.f5.si/js/firebase.js';
+    import { collection, query, where, getDocs, deleteDoc, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+
+    let currentArticleId = null;
+    let currentEditors   = [];
+    let allUsersCache    = {};
+
+    window.openShareModal = async function(articleId) {
+      currentArticleId = articleId;
+      document.getElementById('share-modal').classList.add('open');
+      const list = document.getElementById('share-list');
+      list.innerHTML = '<div style="color:var(--text-muted);font-size:13px">読み込み中...</div>';
+      try {
+        const [usersSnap, artSnap] = await Promise.all([
+          get(ref(rtdb, 'users')),
+          getDoc(doc(db, 'articles', articleId))
+        ]);
+        if (usersSnap.exists()) allUsersCache = usersSnap.val();
+        currentEditors = artSnap.data()?.editors || [];
+        renderShareList();
+      } catch(e) { list.innerHTML = '<div style="color:var(--error)">読み込みに失敗しました。</div>'; }
+    };
+    window.closeShareModal = () => document.getElementById('share-modal').classList.remove('open');
+
+    function renderShareList() {
+      const list = document.getElementById('share-list');
+      const rows = Object.entries(allUsersCache)
+        .filter(([uid, u]) => u.role !== 'banned' && !u.noShare);
+      list.innerHTML = rows.map(([uid, u]) => {
+        const isEditor = currentEditors.includes(uid);
+        const isAdmin  = ['owner','admin'].includes(u.role);
+        const initial  = (u.displayName || '?').charAt(0).toUpperCase();
+        let action = '';
+        if (isAdmin) {
+          action = '<span style="font-size:11px;color:var(--text-muted);padding:4px 8px">常時編集可</span>';
+        } else if (isEditor) {
+          action = `<button class="share-btn-remove" onclick="toggleEditor('${uid}', false)">削除</button>`;
+        } else {
+          action = `<button class="share-btn-add" onclick="toggleEditor('${uid}', true)">追加</button>`;
+        }
+        return `<div class="share-user-row">
+          <div class="share-user-info">
+            <div class="share-avatar">${initial}</div>
+            <div>
+              <div style="font-size:14px;font-weight:500">${u.displayName || '-'}</div>
+              <div style="font-size:11px;color:var(--text-muted)">${u.role}</div>
+            </div>
+          </div>
+          ${action}
+        </div>`;
+      }).join('');
+    }
+
+    window.toggleEditor = async function(uid, add) {
+      if (add) { if (!currentEditors.includes(uid)) currentEditors.push(uid); }
+      else { currentEditors = currentEditors.filter(e => e !== uid); }
+      await updateDoc(doc(db, 'articles', currentArticleId), { editors: currentEditors });
+      renderShareList();
+    };
 
     window.doLogout = logout;
     const slug = decodeURIComponent(new URLSearchParams(location.search).get('slug') || '');
@@ -202,14 +274,16 @@
         const canEdit   = ['owner','admin','editor'].includes(userData.role);
         const canDelete = ['owner','admin'].includes(userData.role) || d.createdBy === user.uid;
         document.title = `${d.title} — Dasopedia`;
+        const isPrivate = !d.isPublic;
         document.getElementById('main').innerHTML = `
           <div class="breadcrumb"><a href="/">Dasopedia</a> › <a href="/wiki/">記事一覧</a> › ${d.title}</div>
           <div class="article-header">
-            <h1>${d.title}</h1>
+            <h1>${d.title}${isPrivate ? '<span class="private-badge">非公開</span>' : ''}</h1>
             <div class="meta">${d.createdByName || '不明'} · ${date}</div>
             ${tagsHtml ? `<div class="tags">${tagsHtml}</div>` : ''}
             <div class="article-actions">
               ${canEdit   ? `<a class="btn-edit" href="/edit/?id=${docSnap.id}">編集</a>` : ''}
+              ${canEdit   ? `<button class="btn-edit" onclick="openShareModal('${docSnap.id}')">👥 共有</button>` : ''}
               ${canDelete ? `<button class="btn-delete" id="deleteBtn" onclick="doDelete('${docSnap.id}')" style="display:block">削除</button>` : ''}
             </div>
           </div>
@@ -233,5 +307,15 @@
       <a href="/legal/privacy/" style="font-size:12px;color:var(--text-muted);text-decoration:none" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'">プライバシーポリシー</a>
     </div>
   </footer>
+
+  <div class="share-modal-overlay" id="share-modal" onclick="if(event.target===this)closeShareModal()">
+    <div class="share-modal">
+      <div style="font-size:16px;font-weight:700;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">
+        編集者を管理
+        <button onclick="closeShareModal()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:20px">✕</button>
+      </div>
+      <div id="share-list"><div style="color:var(--text-muted);font-size:13px">読み込み中...</div></div>
+    </div>
+  </div>
 </body>
 </html>

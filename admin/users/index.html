@@ -270,6 +270,15 @@
     window.changeRole = changeRole;
     window.toggleBan  = toggleBan;
 
+    window.toggleNoShare = async function(uid, current) {
+      const msg = current
+        ? 'この人の共有設定をONにします（共有リストに表示されます）。'
+        : 'この人の共有設定をOFFにします（共有リストに表示されなくなります）。';
+      if (!confirm(msg)) return;
+      await update(ref(rtdb, `users/${uid}`), { noShare: !current });
+      location.reload();
+    };
+
     // ===== 招待コード一覧 =====
     async function loadInvites() {
       const tbody = document.getElementById('invite-tbody');
@@ -427,12 +436,15 @@
             : `<button class="btn-ban" onclick="toggleBan('${uid}','${u.role}')">BAN</button>`
           : '';
 
+        const noShareToggle = !isOwner
+          ? `<button class="btn-sm-action" onclick="toggleNoShare('${uid}', ${!!u.noShare})" style="${u.noShare ? 'color:var(--error);border-color:rgba(214,59,59,0.3)' : ''}">${u.noShare ? '共有OFF' : '共有ON'}</button>`
+          : '';
         tbody.innerHTML += `<tr>
           <td>${u.displayName || '-'}${isMe ? ' <span style="color:var(--accent);font-size:11px">(自分)</span>' : ''}</td>
           <td style="color:var(--text-muted)">${u.email || '-'}</td>
           <td>${roleEl}</td>
           <td style="color:var(--text-muted)">${date}</td>
-          <td>${banBtn}</td>
+          <td style="display:flex;gap:6px;flex-wrap:wrap">${banBtn}${noShareToggle}</td>
         </tr>`;
       });
     });

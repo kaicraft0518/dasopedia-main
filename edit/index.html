@@ -175,6 +175,30 @@
     .img-upload-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .img-progress { font-size: 13px; color: var(--text-muted); text-align: center; margin-top: 10px; display: none; }
     .img-progress.show { display: block; }
+
+    /* 公開/非公開トグル */
+    .visibility-toggle { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-family: var(--font); font-size: 13px; color: var(--text-muted); transition: border-color 0.15s; user-select: none; }
+    .visibility-toggle:hover { border-color: var(--accent); }
+    .visibility-toggle.public { border-color: var(--success, #2a9d6f); color: var(--success, #2a9d6f); background: rgba(42,157,111,0.06); }
+    [data-theme="dark"] .visibility-toggle.public { color: #6cefb0; border-color: #6cefb0; background: rgba(108,239,176,0.06); }
+    .toggle-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+    /* 共有モーダル */
+    .share-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+    .share-modal-overlay.open { display: flex; }
+    .share-modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 100%; max-width: 440px; max-height: 80vh; overflow-y: auto; }
+    .share-modal-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .share-modal-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 20px; }
+    .share-user-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .share-user-row:last-child { border-bottom: none; }
+    .share-user-info { display: flex; align-items: center; gap: 10px; }
+    .share-user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .share-user-name { font-size: 14px; font-weight: 500; }
+    .share-user-role { font-size: 11px; color: var(--text-muted); }
+    .share-btn-add { background: rgba(79,109,224,0.1); border: 1px solid rgba(79,109,224,0.3); border-radius: 6px; color: var(--accent); cursor: pointer; font-family: var(--font); font-size: 12px; font-weight: 600; padding: 5px 12px; transition: background 0.15s; }
+    .share-btn-add:hover { background: rgba(79,109,224,0.2); }
+    .share-btn-remove { background: rgba(214,59,59,0.08); border: 1px solid rgba(214,59,59,0.25); border-radius: 6px; color: var(--error); cursor: pointer; font-family: var(--font); font-size: 12px; padding: 5px 12px; }
+    .share-badge-owner { font-size: 11px; color: var(--text-muted); padding: 4px 8px; }
   </style>
   <!-- テーマ初期化（ちらつき防止のため最初に実行） -->
   <script>
@@ -205,6 +229,11 @@
       <button id="theme-toggle" onclick="window.themeToggle()" title="テーマ切り替え" style="background:none;border:1px solid var(--border);border-radius:7px;color:var(--text);cursor:pointer;font-size:15px;padding:5px 10px;transition:border-color 0.15s;">🌙</button>
       <a class="btn-cancel" href="/">ホーム</a>
       <a class="btn-cancel" href="/wiki/">キャンセル</a>
+      <div class="visibility-toggle" id="visibility-toggle" onclick="toggleVisibility()">
+        <div class="toggle-dot"></div>
+        <span id="visibility-label">非公開</span>
+      </div>
+      <button class="btn-cancel" id="share-btn" onclick="openShareModal()" style="display:none">👥 共有</button>
       <button class="btn-save" id="saveBtn" onclick="doSave()">保存</button>
     </div>
   </nav>
@@ -293,6 +322,19 @@
     </div>
   </div>
 
+
+  <!-- 共有モーダル -->
+  <div class="share-modal-overlay" id="share-modal" onclick="if(event.target===this)closeShareModal()">
+    <div class="share-modal">
+      <div class="share-modal-title">
+        編集者を管理
+        <button class="share-modal-close" onclick="closeShareModal()">✕</button>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">追加した人はこの記事を編集できます。</div>
+      <div id="share-user-list"><div style="color:var(--text-muted);font-size:13px">読み込み中...</div></div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script type="module">
@@ -305,6 +347,9 @@
     import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     let currentUser, currentUserData;
+    let isPublic = false;
+    let editors  = [];
+    let allUsers = {};
     const params = new URLSearchParams(location.search);
     const articleId = params.get('id') || null;
     if (articleId) document.getElementById('nav-mode').textContent = '記事を編集';
@@ -314,6 +359,79 @@
       t.textContent = msg; t.className = `toast show ${type}`;
       setTimeout(() => t.className = 'toast', 3000);
     }
+
+    // 公開/非公開トグル
+    function syncVisibilityUI() {
+      const tog   = document.getElementById('visibility-toggle');
+      const label = document.getElementById('visibility-label');
+      if (isPublic) {
+        tog.classList.add('public');
+        label.textContent = '公開';
+      } else {
+        tog.classList.remove('public');
+        label.textContent = '非公開';
+      }
+    }
+
+    window.toggleVisibility = function() {
+      isPublic = !isPublic;
+      syncVisibilityUI();
+    };
+
+    // 共有モーダル
+    window.openShareModal = async function() {
+      document.getElementById('share-modal').classList.add('open');
+      renderShareList();
+    };
+    window.closeShareModal = () => document.getElementById('share-modal').classList.remove('open');
+
+    function renderShareList() {
+      const list = document.getElementById('share-user-list');
+      const canEdit = currentUserData.role === 'owner' || currentUserData.role === 'admin' || (articleId && currentUser);
+
+      // 作成者は常に最上位に表示
+      const rows = Object.entries(allUsers)
+        .filter(([uid, u]) => u.role !== 'banned' && !u.noShare)
+        .map(([uid, u]) => {
+          const isCreator  = uid === currentUser?.uid && !articleId ? true :
+                             u.role === 'owner' || u.role === 'admin';
+          const isEditor   = editors.includes(uid);
+          const isMe       = uid === currentUser?.uid;
+          return { uid, u, isEditor, isMe };
+        });
+
+      list.innerHTML = rows.map(({ uid, u, isEditor, isMe }) => {
+        const initial = (u.displayName || '?').charAt(0).toUpperCase();
+        let action = '';
+        if (isMe) {
+          action = '<span class="share-badge-owner">作成者</span>';
+        } else if (['owner','admin'].includes(u.role)) {
+          action = '<span class="share-badge-owner">常時編集可</span>';
+        } else if (isEditor) {
+          action = `<button class="share-btn-remove" onclick="removeEditor('${uid}')">削除</button>`;
+        } else {
+          action = `<button class="share-btn-add" onclick="addEditor('${uid}')">追加</button>`;
+        }
+        return `<div class="share-user-row">
+          <div class="share-user-info">
+            <div class="share-user-avatar">${initial}</div>
+            <div>
+              <div class="share-user-name">${u.displayName || '-'}${isMe ? ' (自分)' : ''}</div>
+              <div class="share-user-role">${u.role}</div>
+            </div>
+          </div>
+          ${action}
+        </div>`;
+      }).join('');
+    }
+
+    window.addEditor = function(uid) {
+      if (!editors.includes(uid)) { editors.push(uid); renderShareList(); }
+    };
+    window.removeEditor = function(uid) {
+      editors = editors.filter(e => e !== uid);
+      renderShareList();
+    };
 
     window.updatePreview = () => {
       document.getElementById('preview').innerHTML = marked.parse(document.getElementById('editor').value || '');
@@ -580,11 +698,12 @@
 
       try {
         if (articleId) {
-          await updateDoc(doc(db, 'articles', articleId), { title, slug, content, contentText, tags, updatedAt: serverTimestamp() });
+          await updateDoc(doc(db, 'articles', articleId), { title, slug, content, contentText, tags, isPublic, editors, updatedAt: serverTimestamp() });
           showToast('保存しました！');
         } else {
           await addDoc(collection(db, 'articles'), {
             title, slug, content, contentText, tags,
+            isPublic, editors,
             createdBy: currentUser.uid,
             createdByName: currentUserData.displayName || currentUser.displayName || '',
             createdAt: serverTimestamp(), updatedAt: serverTimestamp()
@@ -604,6 +723,15 @@
 
     requireEditor(async (user, userData) => {
       currentUser = user; currentUserData = userData;
+
+      // 全ユーザー読み込み（共有モーダル用）
+      try {
+        const snap = await get(ref(rtdb, 'users'));
+        if (snap.exists()) allUsers = snap.val();
+      } catch(e) { console.warn('users load failed:', e); }
+
+      // 共有ボタンを表示（編集ページのみ）
+      if (articleId) document.getElementById('share-btn').style.display = 'block';
       if (articleId) {
         try {
           const snap = await getDoc(doc(db, 'articles', articleId));
@@ -613,6 +741,9 @@
             document.getElementById('slug-input').value  = d.slug  || '';
             document.getElementById('tags-input').value  = (d.tags || []).join(', ');
             document.getElementById('editor').value      = d.content || '';
+            isPublic = d.isPublic || false;
+            editors  = d.editors  || [];
+            syncVisibilityUI();
             updatePreview();
           }
         } catch (e) { showToast('記事の読み込みに失敗しました。', 'error'); }

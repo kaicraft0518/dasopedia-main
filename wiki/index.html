@@ -173,50 +173,93 @@
     <div class="count" id="count"></div>
     <div class="article-grid" id="article-list"><div class="empty">読み込み中...</div></div>
   </div>
-  <script type="module">
-    import { toggleTheme, updateToggleButton } from 'https://dasopedia.f5.si/js/theme.js';
-    window.themeToggle = toggleTheme;
-    updateToggleButton();
-    import { requireAuth, logout } from 'https://dasopedia.f5.si/js/auth.js';
-    import { db } from 'https://dasopedia.f5.si/js/firebase.js';
-    import { collection, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+<script type="module">
+  import { toggleTheme, updateToggleButton } from 'https://dasopedia.f5.si/js/theme.js';
+  import { requireAuth, logout } from 'https://dasopedia.f5.si/js/auth.js';
+  import { db } from 'https://dasopedia.f5.si/js/firebase.js';
+  import {
+    collection,
+    query,
+    where,
+    orderBy,
+    getDocs
+  } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-    window.doLogout = logout;
-    let allArticles = [];
+  window.themeToggle = toggleTheme;
+  window.doLogout = logout;
+  updateToggleButton();
 
-    window.renderList = function() {
-      const kw  = document.getElementById('filter-keyword').value.trim().toLowerCase();
-      const tag = document.getElementById('filter-tag').value.trim().toLowerCase();
-      const filtered = allArticles.filter(a => {
-        return (!kw || a.title.toLowerCase().includes(kw)) &&
-               (!tag || (a.tags || []).some(t => t.toLowerCase().includes(tag)));
-      });
-      const list = document.getElementById('article-list');
-      document.getElementById('count').textContent = `${filtered.length} 件`;
-      if (!filtered.length) { list.innerHTML = '<div class="empty">条件に一致する記事がありません。</div>'; return; }
-      list.innerHTML = filtered.map(a => {
-        const date = a.updatedAt ? new Date(a.updatedAt.toMillis()).toLocaleDateString('ja-JP') : '';
-        const tagsHtml = (a.tags || []).map(t =>
-          `<span class="tag" onclick="event.preventDefault();document.getElementById('filter-tag').value='${t}';renderList()">${t}</span>`
-        ).join('');
-        return `<a class="article-card" href="/wiki/article/?slug=${encodeURIComponent(a.slug || a.id)}">
-          <div>
-            <div class="article-title">${a.title}</div>
-            <div class="article-meta">${a.createdByName || '不明'} · ${date}</div>
-            ${tagsHtml ? `<div class="tags">${tagsHtml}</div>` : ''}
-          </div>
-          <div class="arrow">›</div>
-        </a>`;
-      }).join('');
-    };
+  let allArticles = [];
 
-    requireAuth(async () => {
-      const snap = await getDocs(query(collection(db, 'articles'), orderBy('updatedAt', 'desc')));
-      allArticles = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      renderList();
+  function escapeHtml(str = '') {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  window.renderList = function() {
+    const kw = document.getElementById('filter-keyword').value.trim().toLowerCase();
+    const tag = document.getElementById('filter-tag').value.trim().toLowerCase();
+
+    const filtered = allArticles.filter(a => {
+      return (!kw || (a.title || '').toLowerCase().includes(kw)) &&
+      (!tag || (a.tags || []).some(t => String(t).toLowerCase().includes(tag)));
     });
-  </script>
 
+    const list = document.getElementById('article-list');
+    document.getElementById('count').textContent = `${filtered.length} 件`;
+
+    if (!filtered.length) {
+      list.innerHTML = '<div class="empty">条件に一致する記事がありません。</div>';
+      return;
+    }
+
+    list.innerHTML = filtered.map(a => {
+      const date = a.updatedAt
+        ? new Date(a.updatedAt.toMillis()).toLocaleDateString('ja-JP')
+        : '';
+
+      const tagsHtml = (a.tags || []).map(t => {
+        const safeTag = escapeHtml(t);
+        return `<span class="tag" onclick="event.preventDefault();document.getElementById('filter-tag').value='${safeTag}';renderList()">${safeTag}</span>`;
+      }).join('');
+
+      return `<a class="article-card" href="/wiki/article/?slug=${encodeURIComponent(a.slug || a.id)}">
+        <div>
+          <div class="article-title">${escapeHtml(a.title || 'Untitled')}</div>
+          <div class="article-meta">${escapeHtml(a.createdByName || '不明')} · ${date}</div>
+          ${tagsHtml ? `<div class="tags">${tagsHtml}</div>` : ''}
+        </div>
+        <div class="arrow">›</div>
+      </a>`;
+    }).join('');
+  };
+
+  async function loadPublicArticles() {
+    const q = query(
+      collection(db, 'articles'),
+      where('isPublic', '==', true),
+      orderBy('updatedAt', 'desc')
+    );
+
+    const snap = await getDocs(q);
+    allArticles = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderList();
+  }
+
+  requireAuth(async (user, userData) => {
+    try {
+      await loadPublicArticles();
+    } catch (e) {
+      console.error(e);
+      document.getElementById('article-list').innerHTML =
+        '<div class="empty">記事の読み込みに失敗しました。</div>';
+    }
+  });
+</script>
   <footer style="border-top:1px solid var(--border);margin-top:auto;padding:24px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
     <span style="font-size:12px;color:var(--text-muted)">© Dasopedia</span>
     <div style="display:flex;gap:16px">

@@ -190,7 +190,10 @@
         const q = query(collection(db, 'articles'), orderBy('updatedAt', 'desc'), limit(10));
         const snap = await getDocs(q);
         const list = document.getElementById('article-list');
-        if (snap.empty) { list.innerHTML = '<div class="empty">まだ記事がありません。最初の記事を書いてみましょう！</div>'; return; }
+        if (snap.empty) {
+          list.innerHTML = '<div class="empty">まだ記事がありません。最初の記事を書いてみましょう！</div>';
+          return;
+        }
         list.innerHTML = '';
         snap.forEach(doc => {
           const d = doc.data();
@@ -205,6 +208,11 @@
             <div class="arrow">›</div>
           </a>`;
         });
+      } catch (e) {
+        console.error(e);
+        document.getElementById('article-list').innerHTML = '<div class="empty">記事の読み込みに失敗しました。</div>';
+      }
+    });
   </script>
 </body>
 </html>

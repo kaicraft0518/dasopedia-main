@@ -37,11 +37,14 @@
     .empty { color: var(--text-muted); font-size: 14px; text-align: center; padding: 48px; }
     .count { font-size: 13px; color: var(--text-muted); margin-bottom: 12px; }
 
+    /* モバイルメニュー（PC時は常に非表示） */
+    #mobile-menu { display: none; }
+
     @media (max-width: 680px) {
       nav { padding: 0 16px; }
       .nav-right { display: none; }
       #hamburger { display: flex; align-items: center; justify-content: center; }
-      #mobile-menu { display: none; flex-direction: column; position: absolute; top: 56px; left: 0; right: 0; background: var(--surface); border-bottom: 1px solid var(--border); padding: 4px 0; z-index: 300; }
+      #mobile-menu { display: none; flex-direction: column; position: absolute; top: 56px; left: 0; right: 0; background: var(--surface); border-bottom: 1px solid var(--border); padding: 4px 0; z-index: 300; box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
       #mobile-menu.open { display: flex; }
       #mobile-menu .mob-item { padding: 13px 20px; font-size: 14px; color: var(--text-muted); text-decoration: none; border-bottom: 1px solid var(--border); display: block; }
       #mobile-menu .mob-item.accent { color: var(--accent); font-weight: 600; }

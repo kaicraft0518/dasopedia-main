@@ -4,192 +4,167 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>記事を編集 — Dasopedia</title>
+  <script>(function(){ document.documentElement.setAttribute('data-theme', localStorage.getItem('dasopedia-theme') || 'light'); })();</script>
+
+  <!-- CodeMirror 6 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js"></script>
+
+  <!-- marked -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- highlight.js -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hljs-light">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hljs-dark" disabled>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    /* ===== テーマ変数 ===== */
     [data-theme="light"] {
-      --bg: #f5f6fa;
-      --surface: #ffffff;
-      --border: #e2e4ed;
-      --accent: #4f6de0;
-      --accent-hover: #3d5acc;
-      --text: #1a1d2e;
-      --text-muted: #6b7080;
-      --error: #d63b3b;
-      --success: #2a9d6f;
+      --bg: #f5f6fa; --surface: #ffffff; --border: #e2e4ed;
+      --accent: #4f6de0; --accent-hover: #3d5acc;
+      --text: #1a1d2e; --text-muted: #6b7080;
+      --error: #d63b3b; --success: #2a9d6f;
       --font: 'Inter', 'Hiragino Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
     }
     [data-theme="dark"] {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --border: #2a2d3e;
-      --accent: #6c8bef;
-      --accent-hover: #8aa3f5;
-      --text: #e8eaf0;
-      --text-muted: #7b7f96;
-      --error: #ef6c6c;
-      --success: #6cefb0;
+      --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3e;
+      --accent: #6c8bef; --accent-hover: #8aa3f5;
+      --text: #e8eaf0; --text-muted: #7b7f96;
+      --error: #ef6c6c; --success: #6cefb0;
       --font: 'Inter', 'Hiragino Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
     }
-    body { background: var(--bg); color: var(--text); font-family: var(--font); height: 100vh; display: flex; flex-direction: column; }
-    nav { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 56px; flex-shrink: 0; }
-    .nav-logo { font-size: 16px; font-weight: 700; color: var(--text); text-decoration: none; }
+
+    body { background: var(--bg); color: var(--text); font-family: var(--font); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ナビ */
+    nav { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; padding: 0 16px; height: 56px; flex-shrink: 0; position: relative; z-index: 10; }
+    .nav-logo { font-size: 15px; font-weight: 700; color: var(--text); text-decoration: none; flex-shrink: 0; }
     .nav-logo span { color: var(--accent); }
-    .nav-center { font-size: 14px; color: var(--text-muted); }
-    .nav-right { display: flex; align-items: center; gap: 12px; }
-    .btn-save { background: var(--accent); border: none; border-radius: 7px; color: #fff; cursor: pointer; font-family: var(--font); font-size: 13px; font-weight: 600; padding: 7px 18px; transition: background 0.15s; }
+    .nav-mode { font-size: 13px; color: var(--text-muted); flex: 1; text-align: center; }
+    .btn-nav { background: none; border: 1px solid var(--border); border-radius: 7px; color: var(--text-muted); cursor: pointer; font-family: var(--font); font-size: 13px; padding: 6px 12px; text-decoration: none; transition: border-color 0.15s, color 0.15s; white-space: nowrap; }
+    .btn-nav:hover { border-color: var(--accent); color: var(--text); }
+    .btn-save { background: var(--accent); border: none; border-radius: 7px; color: #fff; cursor: pointer; font-family: var(--font); font-size: 13px; font-weight: 600; padding: 7px 16px; transition: background 0.15s; white-space: nowrap; }
     .btn-save:hover:not(:disabled) { background: var(--accent-hover); }
     .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-cancel { background: none; border: 1px solid var(--border); border-radius: 7px; color: var(--text-muted); cursor: pointer; font-family: var(--font); font-size: 13px; padding: 7px 14px; text-decoration: none; transition: border-color 0.15s; }
-    .btn-cancel:hover { border-color: var(--accent); color: var(--text); }
-    .editor-area { display: flex; flex: 1; overflow: hidden; }
-    .editor-left { display: flex; flex-direction: column; flex: 1; border-right: 1px solid var(--border); overflow: hidden; }
-    .editor-meta { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
-    .meta-row { display: flex; gap: 10px; }
-    .meta-input { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font); font-size: 13px; padding: 9px 12px; outline: none; transition: border-color 0.15s; }
-    .meta-input:focus { border-color: var(--accent); }
-    #title-input { font-size: 15px; font-weight: 600; flex: 1; }
-    #slug-input { flex: 1; color: var(--text-muted); font-family: var(--font-mono); font-size: 12px; }
-    #tags-input { width: 100%; }
-    .toolbar { display: flex; gap: 4px; padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--surface); flex-wrap: wrap; }
-    .tb-btn { background: none; border: 1px solid transparent; border-radius: 5px; color: var(--text-muted); cursor: pointer; font-family: var(--font-mono); font-size: 12px; padding: 4px 8px; transition: all 0.1s; }
-    .tb-btn:hover { background: var(--bg); border-color: var(--border); color: var(--text); }
-    textarea { background: var(--bg); border: none; color: var(--text); font-family: var(--font-mono); font-size: 13px; line-height: 1.7; padding: 20px; resize: none; flex: 1; outline: none; }
-    .editor-right { flex: 1; overflow-y: auto; padding: 24px 32px; }
-    .preview-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 20px; }
-    .preview-body { line-height: 1.8; font-size: 15px; }
-    .preview-body h2 { font-size: 20px; border-bottom: 1px solid var(--border); padding-bottom: 6px; margin: 24px 0 10px; }
-    .preview-body h3 { font-size: 17px; margin: 20px 0 8px; }
-    .preview-body p { margin-bottom: 14px; }
-    .preview-body ul, .preview-body ol { margin: 0 0 14px 24px; }
-    .preview-body code { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-mono); font-size: 12px; padding: 2px 5px; }
-    .preview-body pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin: 14px 0; overflow-x: auto; }
-    .preview-body pre code { background: none; border: none; padding: 0; }
-    .preview-body blockquote { border-left: 3px solid var(--accent); margin: 14px 0; padding: 8px 16px; color: var(--text-muted); }
-    .preview-body a { color: var(--accent); }
-    .preview-body table { border-collapse: collapse; width: 100%; margin: 14px 0; }
-    .preview-body th, .preview-body td { border: 1px solid var(--border); padding: 8px 12px; }
-    .preview-body th { background: var(--surface); font-weight: 600; }
-    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 20px; font-size: 13px; display: none; z-index: 999; }
-    .toast.show { display: block; }
-    .toast.success { border-color: rgba(108,239,176,0.4); color: var(--success); }
-    .toast.error { border-color: rgba(239,108,108,0.4); color: var(--error); }
-
-
-    @media (max-width: 640px) {
-      .editor-area { flex-direction: column; }
-      .editor-left { border-right: none; border-bottom: 1px solid var(--border); max-height: 50vh; }
-      .editor-right { max-height: 40vh; overflow-y: auto; padding: 16px; }
-      textarea { min-height: 200px; }
-      .toolbar { gap: 2px; padding: 6px 8px; }
-      .tb-btn { font-size: 11px; padding: 3px 6px; }
-      .nav-center { display: none; }
-    }
-    /* ===== レスポンシブ ===== */
-    @media (max-width: 640px) {
-      nav { padding: 0 16px; height: auto; min-height: 56px; flex-wrap: wrap; gap: 0; }
-      .nav-right { gap: 8px; }
-      .nav-search { width: 120px; }
-      .main { padding: 24px 16px; }
-      .hero h1 { font-size: 26px; }
-      .hero-sub { font-size: 14px; }
-      .stats { grid-template-columns: 1fr 1fr; gap: 10px; }
-      .menu-grid { grid-template-columns: 1fr; }
-      .filters { flex-direction: column; }
-      .meta-row { flex-direction: column; }
-      .search-row { flex-direction: column; }
-      .detail-fields { grid-template-columns: 1fr; }
-      .article-grid { gap: 8px; }
-      .article-card { padding: 14px 16px; }
-      table { font-size: 12px; display: block; overflow-x: auto; }
-      th, td { padding: 8px 10px; white-space: nowrap; }
-      .card { padding: 28px 20px; }
-      .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
-      .page-header > div { width: 100%; }
-      .page-header > div button { width: 100%; }
-      h1 { font-size: 20px; }
-      .doc-nav ol { gap: 4px; }
-    }
-
-    /* editページのナビ：ハンバーガーなし・常に横並び */
-    #hamburger { display: none; }
-    #nav-menu { display: flex; align-items: center; gap: 8px; }
-    @media (max-width: 640px) {
-      nav { padding: 0 12px; gap: 6px; }
-      .nav-center { display: none; }
-      .btn-cancel { font-size: 12px; padding: 6px 10px; }
-      .btn-save { font-size: 12px; padding: 6px 12px; }
-      .visibility-toggle { font-size: 12px; padding: 6px 10px; }
-      #theme-toggle { display: none; }
-    }
-
-    /* 画像アップロードモーダル */
-    .img-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
-    .img-modal-overlay.open { display: flex; }
-    .img-modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 100%; max-width: 420px; }
-    .img-modal-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-    .img-modal-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 20px; line-height: 1; }
-    .img-drop-zone {
-      border: 2px dashed var(--border); border-radius: 10px; padding: 32px 20px;
-      text-align: center; cursor: pointer; transition: border-color 0.15s, background 0.15s;
-      margin-bottom: 16px;
-    }
-    .img-drop-zone:hover, .img-drop-zone.drag-over { border-color: var(--accent); background: rgba(79,109,224,0.04); }
-    .img-drop-zone input[type="file"] { display: none; }
-    .img-drop-icon { font-size: 32px; margin-bottom: 8px; }
-    .img-drop-text { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
-    .img-preview { display: none; margin-bottom: 16px; text-align: center; }
-    .img-preview img { max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid var(--border); }
-    .img-preview-name { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
-    .img-alt-input { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font); font-size: 13px; padding: 9px 12px; outline: none; width: 100%; margin-bottom: 12px; transition: border-color 0.15s; }
-    .img-alt-input:focus { border-color: var(--accent); }
-    .img-upload-btn { background: var(--accent); border: none; border-radius: 8px; color: #fff; cursor: pointer; font-family: var(--font); font-size: 14px; font-weight: 600; padding: 11px; width: 100%; transition: background 0.15s; }
-    .img-upload-btn:hover:not(:disabled) { background: var(--accent-hover); }
-    .img-upload-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .img-progress { font-size: 13px; color: var(--text-muted); text-align: center; margin-top: 10px; display: none; }
-    .img-progress.show { display: block; }
+    .btn-icon { background: none; border: 1px solid var(--border); border-radius: 7px; color: var(--text); cursor: pointer; font-size: 15px; padding: 5px 9px; }
 
     /* 公開/非公開トグル */
-    .visibility-toggle { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-family: var(--font); font-size: 13px; color: var(--text-muted); transition: border-color 0.15s; user-select: none; }
-    .visibility-toggle:hover { border-color: var(--accent); }
-    .visibility-toggle.public { border-color: var(--success, #2a9d6f); color: var(--success, #2a9d6f); background: rgba(42,157,111,0.06); }
-    [data-theme="dark"] .visibility-toggle.public { color: #6cefb0; border-color: #6cefb0; background: rgba(108,239,176,0.06); }
-    .toggle-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+    .visibility-toggle { display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; cursor: pointer; font-size: 12px; color: var(--text-muted); transition: all 0.15s; white-space: nowrap; }
+    .visibility-toggle.public { border-color: #2a9d6f; color: #2a9d6f; background: rgba(42,157,111,0.06); }
+    [data-theme="dark"] .visibility-toggle.public { color: #6cefb0; border-color: #6cefb0; }
+    .toggle-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+    /* エディタエリア */
+    .editor-area { display: flex; flex: 1; overflow: hidden; }
+    .editor-left { display: flex; flex-direction: column; flex: 1; border-right: 1px solid var(--border); overflow: hidden; min-width: 0; }
+    .editor-meta { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+    .meta-row { display: flex; gap: 8px; }
+    .meta-input { background: var(--bg); border: 1px solid var(--border); border-radius: 7px; color: var(--text); font-family: var(--font); font-size: 13px; padding: 8px 11px; outline: none; transition: border-color 0.15s; }
+    .meta-input:focus { border-color: var(--accent); }
+    #title-input { font-size: 14px; font-weight: 600; flex: 1; }
+    #slug-input { flex: 1; color: var(--text-muted); font-family: var(--font-mono); font-size: 11px; }
+    #tags-input { width: 100%; }
+
+    /* ツールバー */
+    .toolbar { display: flex; gap: 3px; padding: 6px 10px; border-bottom: 1px solid var(--border); background: var(--surface); flex-wrap: wrap; align-items: center; flex-shrink: 0; }
+    .tb-btn { background: none; border: 1px solid transparent; border-radius: 5px; color: var(--text-muted); cursor: pointer; font-family: var(--font-mono); font-size: 12px; padding: 3px 7px; transition: all 0.1s; white-space: nowrap; }
+    .tb-btn:hover { background: var(--bg); border-color: var(--border); color: var(--text); }
+    .tb-sep { width: 1px; height: 18px; background: var(--border); margin: 0 3px; flex-shrink: 0; }
+
+    /* 色ボタン */
+    .tb-color { width: 20px; height: 20px; border-radius: 4px; border: 2px solid transparent; cursor: pointer; transition: transform 0.1s; flex-shrink: 0; }
+    .tb-color:hover { transform: scale(1.2); border-color: var(--text-muted); }
+
+    /* テキストエリア（CodeMirrorの代わり） */
+    .editor-textarea { flex: 1; background: var(--bg); border: none; color: var(--text); font-family: var(--font-mono); font-size: 14px; line-height: 1.75; padding: 16px 20px; resize: none; outline: none; overflow-y: auto; }
+
+    /* プレビュー */
+    .editor-right { flex: 1; overflow-y: auto; padding: 24px 28px; min-width: 0; }
+    .preview-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+    .preview-body h1 { font-size: 24px; font-weight: 700; margin: 24px 0 10px; }
+    .preview-body h2 { font-size: 19px; font-weight: 700; border-bottom: 1px solid var(--border); padding-bottom: 6px; margin: 22px 0 10px; }
+    .preview-body h3 { font-size: 16px; font-weight: 700; margin: 18px 0 8px; }
+    .preview-body p { font-size: 14px; line-height: 1.8; margin-bottom: 12px; }
+    .preview-body ul, .preview-body ol { margin: 0 0 12px 22px; }
+    .preview-body li { font-size: 14px; line-height: 1.8; }
+    .preview-body code { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-mono); font-size: 12px; padding: 2px 5px; }
+    .preview-body pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin: 12px 0; overflow-x: auto; }
+    .preview-body pre code { background: none; border: none; padding: 0; font-size: 13px; }
+    .preview-body blockquote { border-left: 3px solid var(--accent); margin: 12px 0; padding: 8px 16px; color: var(--text-muted); }
+    .preview-body a { color: var(--accent); }
+    .preview-body table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+    .preview-body th, .preview-body td { border: 1px solid var(--border); padding: 8px 12px; font-size: 14px; }
+    .preview-body th { background: var(--surface); font-weight: 600; }
+    .preview-body img { max-width: 100%; border-radius: 6px; }
+    [data-theme="light"] #hljs-dark { display: none; }
+    [data-theme="dark"]  #hljs-light { display: none; }
+    [data-theme="dark"]  #hljs-dark  { display: block; }
+
+    /* カラーピッカーポップアップ */
+    .color-popup { position: absolute; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; display: none; z-index: 200; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+    .color-popup.open { display: block; }
+    .color-grid { display: grid; grid-template-columns: repeat(5, 24px); gap: 6px; margin-bottom: 10px; }
+    .size-popup { position: absolute; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px; display: none; z-index: 200; box-shadow: 0 4px 16px rgba(0,0,0,0.15); min-width: 100px; }
+    .size-popup.open { display: block; }
+    .size-item { display: block; width: 100%; background: none; border: none; border-radius: 6px; color: var(--text); cursor: pointer; font-family: var(--font); padding: 6px 12px; text-align: left; transition: background 0.1s; }
+    .size-item:hover { background: var(--bg); }
+
+    /* トースト */
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; font-size: 13px; display: none; z-index: 999; }
+    .toast.show { display: block; }
+    .toast.success { border-color: rgba(42,157,111,0.4); color: var(--success); }
+    .toast.error { border-color: rgba(214,59,59,0.4); color: var(--error); }
 
     /* 共有モーダル */
     .share-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
     .share-modal-overlay.open { display: flex; }
     .share-modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 100%; max-width: 440px; max-height: 80vh; overflow-y: auto; }
-    .share-modal-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-    .share-modal-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 20px; }
     .share-user-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
     .share-user-row:last-child { border-bottom: none; }
     .share-user-info { display: flex; align-items: center; gap: 10px; }
-    .share-user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
-    .share-user-name { font-size: 14px; font-weight: 500; }
-    .share-user-role { font-size: 11px; color: var(--text-muted); }
-    .share-btn-add { background: rgba(79,109,224,0.1); border: 1px solid rgba(79,109,224,0.3); border-radius: 6px; color: var(--accent); cursor: pointer; font-family: var(--font); font-size: 12px; font-weight: 600; padding: 5px 12px; transition: background 0.15s; }
-    .share-btn-add:hover { background: rgba(79,109,224,0.2); }
+    .share-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .share-btn-add { background: rgba(79,109,224,0.1); border: 1px solid rgba(79,109,224,0.3); border-radius: 6px; color: var(--accent); cursor: pointer; font-family: var(--font); font-size: 12px; font-weight: 600; padding: 5px 12px; }
     .share-btn-remove { background: rgba(214,59,59,0.08); border: 1px solid rgba(214,59,59,0.25); border-radius: 6px; color: var(--error); cursor: pointer; font-family: var(--font); font-size: 12px; padding: 5px 12px; }
-    .share-badge-owner { font-size: 11px; color: var(--text-muted); padding: 4px 8px; }
-  </style>
-  <!-- テーマ初期化（ちらつき防止のため最初に実行） -->
-  <script>
-    (function() {
-      const t = localStorage.getItem('dasopedia-theme') || 'light';
-      document.documentElement.setAttribute('data-theme', t);
-    })();
-  </script>
-  <script>
-    function toggleNav() {
-      var m = document.getElementById('nav-menu');
-      if (m) m.classList.toggle('open');
+
+    /* 画像モーダル */
+    .img-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+    .img-modal-overlay.open { display: flex; }
+    .img-modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 100%; max-width: 420px; }
+    .img-drop-zone { border: 2px dashed var(--border); border-radius: 10px; padding: 28px 20px; text-align: center; cursor: pointer; transition: border-color 0.15s, background 0.15s; margin-bottom: 14px; }
+    .img-drop-zone:hover, .img-drop-zone.drag-over { border-color: var(--accent); background: rgba(79,109,224,0.04); }
+    .img-drop-zone input[type="file"] { display: none; }
+    .img-preview { display: none; margin-bottom: 14px; text-align: center; }
+    .img-preview img { max-width: 100%; max-height: 180px; border-radius: 8px; border: 1px solid var(--border); }
+    .modal-input { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font); font-size: 13px; padding: 9px 12px; outline: none; width: 100%; margin-bottom: 10px; transition: border-color 0.15s; }
+    .modal-input:focus { border-color: var(--accent); }
+    .img-upload-btn { background: var(--accent); border: none; border-radius: 8px; color: #fff; cursor: pointer; font-family: var(--font); font-size: 14px; font-weight: 600; padding: 11px; width: 100%; }
+    .img-upload-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .img-progress { font-size: 13px; color: var(--text-muted); text-align: center; margin-top: 8px; display: none; }
+    .img-progress.show { display: block; }
+
+    /* サイズ変更モーダル */
+    .resize-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+    .resize-modal-overlay.open { display: flex; }
+    .resize-modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 100%; max-width: 420px; max-height: 70vh; overflow-y: auto; }
+
+    @media (max-width: 640px) {
+      .editor-area { flex-direction: column; }
+      .editor-left { border-right: none; border-bottom: 1px solid var(--border); max-height: 50vh; }
+      .editor-right { max-height: 40vh; padding: 16px; }
+      .nav-mode { display: none; }
+      .toolbar { gap: 2px; padding: 4px 8px; }
     }
+  </style>
+  <script>
+    function toggleNav() {}
     document.addEventListener('click', function(e) {
-      if (!e.target.closest('nav')) {
-        var m = document.getElementById('nav-menu');
-        if (m) m.classList.remove('open');
+      if (!e.target.closest('.color-popup') && !e.target.closest('[onclick*="ColorPopup"]') && !e.target.closest('[onclick*="openColor"]')) {
+        document.querySelectorAll('.color-popup').forEach(p => p.classList.remove('open'));
+      }
+      if (!e.target.closest('.size-popup') && !e.target.closest('[onclick*="SizePopup"]') && !e.target.closest('[onclick*="openSize"]')) {
+        document.querySelectorAll('.size-popup').forEach(p => p.classList.remove('open'));
       }
     });
   </script>
@@ -197,20 +172,18 @@
 <body>
   <nav>
     <a class="nav-logo" href="/"><span>D</span>asopedia</a>
-    <div class="nav-center" id="nav-mode">新規作成</div>
-    <button id="hamburger" onclick="toggleNav()">☰</button>
-    <div id="nav-menu">
-      <button id="theme-toggle" onclick="window.themeToggle()" title="テーマ切り替え" style="background:none;border:1px solid var(--border);border-radius:7px;color:var(--text);cursor:pointer;font-size:15px;padding:5px 10px;transition:border-color 0.15s;">🌙</button>
-      <a class="btn-cancel" href="/">ホーム</a>
-      <a class="btn-cancel" href="/wiki/">キャンセル</a>
-      <div class="visibility-toggle" id="visibility-toggle" onclick="toggleVisibility()">
-        <div class="toggle-dot"></div>
-        <span id="visibility-label">非公開</span>
-      </div>
-      <button class="btn-cancel" id="share-btn" onclick="openShareModal()" style="display:none">👥 共有</button>
-      <button class="btn-save" id="saveBtn" onclick="doSave()">保存</button>
+    <div class="nav-mode" id="nav-mode">新規作成</div>
+    <a class="btn-nav" href="/">ホーム</a>
+    <a class="btn-nav" href="/wiki/">キャンセル</a>
+    <div class="visibility-toggle" id="visibility-toggle" onclick="toggleVisibility()">
+      <div class="toggle-dot"></div>
+      <span id="visibility-label">非公開</span>
     </div>
+    <button class="btn-nav" id="share-btn" onclick="openShareModal()" style="display:none">👥 共有</button>
+    <button class="btn-icon" id="theme-toggle" onclick="window.themeToggle()">🌙</button>
+    <button class="btn-save" id="saveBtn" onclick="doSave()">保存</button>
   </nav>
+
   <div class="editor-area">
     <div class="editor-left">
       <div class="editor-meta">
@@ -220,44 +193,109 @@
         </div>
         <input class="meta-input" id="tags-input" placeholder="タグ（カンマ区切り）　例: JavaScript, Firebase">
       </div>
+
+      <!-- ツールバー -->
       <div class="toolbar">
-        <button class="tb-btn" onclick="ins('**','**')"><b>B</b></button>
-        <button class="tb-btn" onclick="ins('*','*')"><i>I</i></button>
-        <button class="tb-btn" onclick="ins('`','`')">code</button>
-        <button class="tb-btn" onclick="insLine('# ')">H1</button>
-        <button class="tb-btn" onclick="insLine('## ')">H2</button>
-        <button class="tb-btn" onclick="insLine('### ')">H3</button>
-        <button class="tb-btn" onclick="insLine('- ')">リスト</button>
-        <button class="tb-btn" onclick="insLine('> ')">引用</button>
-        <button class="tb-btn" onclick="ins('\n```\n','\n```\n')">```</button>
-        <button class="tb-btn" onclick="ins('[','](url)')">リンク</button>
-        <button class="tb-btn" onclick="openImgModal()">🖼 画像</button>
-        <button class="tb-btn" onclick="openResizeModal()">↔ サイズ変更</button>
+        <!-- 基本書式 -->
+        <button class="tb-btn" onclick="ins('**','**')" title="太字"><b>B</b></button>
+        <button class="tb-btn" onclick="ins('*','*')" title="斜体"><i>I</i></button>
+        <button class="tb-btn" onclick="ins('~~','~~')" title="取り消し線"><s>S</s></button>
+        <button class="tb-btn" onclick="ins('`','`')" title="インラインコード">code</button>
+        <div class="tb-sep"></div>
+        <!-- 見出し -->
+        <button class="tb-btn" onclick="insLine('# ')" title="見出し1">H1</button>
+        <button class="tb-btn" onclick="insLine('## ')" title="見出し2">H2</button>
+        <button class="tb-btn" onclick="insLine('### ')" title="見出し3">H3</button>
+        <div class="tb-sep"></div>
+        <!-- リスト -->
+        <button class="tb-btn" onclick="insLine('- ')" title="リスト">リスト</button>
+        <button class="tb-btn" onclick="insLine('1. ')" title="番号リスト">番号</button>
+        <button class="tb-btn" onclick="insLine('> ')" title="引用">引用</button>
+        <button class="tb-btn" onclick="ins('\n```\n','\n```\n')" title="コードブロック">```</button>
+        <button class="tb-btn" onclick="ins('[','](url)')" title="リンク">リンク</button>
+        <div class="tb-sep"></div>
+        <!-- 色 -->
+        <div style="position:relative">
+          <button class="tb-btn" onclick="toggleColorPopup(event)" title="文字色">🎨 色</button>
+          <div class="color-popup" id="color-popup">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-weight:600">文字色</div>
+            <div class="color-grid" id="color-grid"></div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <input type="color" id="custom-color" style="width:28px;height:28px;border:none;padding:0;cursor:pointer;border-radius:4px">
+              <button class="tb-btn" onclick="applyCustomColor()" style="font-size:11px">カスタム色</button>
+            </div>
+          </div>
+        </div>
+        <!-- サイズ -->
+        <div style="position:relative">
+          <button class="tb-btn" onclick="toggleSizePopup(event)" title="文字サイズ">Aサイズ</button>
+          <div class="size-popup" id="size-popup">
+            <button class="size-item" style="font-size:11px" onclick="applySize('xs')">極小 (xs)</button>
+            <button class="size-item" style="font-size:13px" onclick="applySize('sm')">小 (sm)</button>
+            <button class="size-item" style="font-size:15px" onclick="applySize('md')">中 (md)</button>
+            <button class="size-item" style="font-size:18px" onclick="applySize('lg')">大 (lg)</button>
+            <button class="size-item" style="font-size:22px" onclick="applySize('xl')">特大 (xl)</button>
+            <button class="size-item" style="font-size:26px" onclick="applySize('xxl')">最大 (xxl)</button>
+          </div>
+        </div>
+        <!-- マーカー・ブロック -->
+        <button class="tb-btn" onclick="insWrap('{mark}','{/mark}')" title="マーカー">マーカー</button>
+        <button class="tb-btn" onclick="insWrap('{info}','{/info}')" title="情報ブロック" style="color:#6c8bef">INFO</button>
+        <button class="tb-btn" onclick="insWrap('{warn}','{/warn}')" title="警告ブロック" style="color:#efb46c">WARN</button>
+        <button class="tb-btn" onclick="insWrap('{danger}','{/danger}')" title="危険ブロック" style="color:#ef6c6c">DANGER</button>
+        <div class="tb-sep"></div>
+        <!-- ファイル -->
+        <button class="tb-btn" onclick="openImgModal()" title="画像をアップロード">🖼 画像</button>
+        <button class="tb-btn" onclick="openResizeModal()" title="画像サイズ変更">↔</button>
+        <button class="tb-btn" onclick="document.getElementById('md-file-input').click()" title=".mdファイルを読み込む">📄 .md</button>
+        <input type="file" id="md-file-input" accept=".md,.markdown,text/markdown" style="display:none" onchange="loadMdFile(event)">
       </div>
-      <textarea id="editor" placeholder="Markdown で記事を書く..." oninput="updatePreview()"></textarea>
+
+      <textarea class="editor-textarea" id="editor" placeholder="Markdown で記事を書く..." oninput="updatePreview()"></textarea>
     </div>
+
     <div class="editor-right">
       <div class="preview-label">プレビュー</div>
       <div class="preview-body" id="preview"></div>
     </div>
   </div>
 
+  <!-- 画像アップロードモーダル -->
+  <div class="img-modal-overlay" id="img-modal" onclick="if(event.target===this)closeImgModal()">
+    <div class="img-modal">
+      <div style="font-size:16px;font-weight:700;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+        画像を挿入 <button onclick="closeImgModal()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:20px">✕</button>
+      </div>
+      <div class="img-drop-zone" id="img-drop-zone" onclick="document.getElementById('img-file-input').click()" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+        <input type="file" id="img-file-input" accept="image/*" onchange="onFileSelect(event)">
+        <div style="font-size:28px;margin-bottom:8px">📁</div>
+        <div style="font-size:13px;color:var(--text-muted)" id="drop-text">クリックまたはドラッグ&ドロップ<br>PNG・JPG・GIF・WebP</div>
+      </div>
+      <div class="img-preview" id="img-preview"><img id="img-preview-img" src="" alt=""><div style="font-size:12px;color:var(--text-muted);margin-top:6px" id="img-preview-name"></div></div>
+      <input class="modal-input" id="img-alt" placeholder="説明文（alt）※省略可">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+        <input class="modal-input" id="img-width" type="number" placeholder="幅（px）※省略で元サイズ" style="margin-bottom:0;flex:1">
+        <span style="font-size:13px;color:var(--text-muted)">px</span>
+      </div>
+      <button class="img-upload-btn" id="img-upload-btn" onclick="uploadImage()" disabled>アップロードして挿入</button>
+      <div class="img-progress" id="img-progress"></div>
+    </div>
+  </div>
 
   <!-- 画像サイズ変更モーダル -->
-  <div class="img-modal-overlay" id="resize-modal" onclick="if(event.target===this)closeResizeModal()">
-    <div class="img-modal">
-      <div class="img-modal-title">
-        画像サイズを変更
-        <button class="img-modal-close" onclick="closeResizeModal()">✕</button>
+  <div class="resize-modal-overlay" id="resize-modal" onclick="if(event.target===this)closeResizeModal()">
+    <div class="resize-modal">
+      <div style="font-size:16px;font-weight:700;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+        画像サイズを変更 <button onclick="closeResizeModal()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:20px">✕</button>
       </div>
-      <div id="resize-img-list" style="margin-bottom:16px;display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto">
-        <div style="font-size:13px;color:var(--text-muted)">記事内の画像を検出中...</div>
+      <div id="resize-img-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;max-height:200px;overflow-y:auto">
+        <div style="font-size:13px;color:var(--text-muted)">検出中...</div>
       </div>
       <div id="resize-editor" style="display:none">
         <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px" id="resize-target-label"></div>
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-          <input class="img-alt-input" id="resize-width" type="number" placeholder="幅（px）" min="1" max="9999" style="margin-bottom:0;flex:1">
-          <span style="font-size:13px;color:var(--text-muted);white-space:nowrap">px</span>
+          <input class="modal-input" id="resize-width" type="number" placeholder="幅（px）" style="margin-bottom:0;flex:1">
+          <span style="font-size:13px;color:var(--text-muted)">px</span>
         </div>
         <div style="display:flex;gap:8px">
           <button class="img-upload-btn" onclick="applyResize()" style="flex:1">適用</button>
@@ -267,42 +305,11 @@
     </div>
   </div>
 
-  <!-- 画像アップロードモーダル -->
-  <div class="img-modal-overlay" id="img-modal" onclick="if(event.target===this)closeImgModal()">
-    <div class="img-modal">
-      <div class="img-modal-title">
-        画像を挿入
-        <button class="img-modal-close" onclick="closeImgModal()">✕</button>
-      </div>
-
-      <div class="img-drop-zone" id="img-drop-zone" onclick="document.getElementById('img-file-input').click()" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
-        <input type="file" id="img-file-input" accept="image/*" onchange="onFileSelect(event)">
-        <div class="img-drop-icon">📁</div>
-        <div class="img-drop-text">クリックまたはドラッグ＆ドロップで画像を選択<br>PNG・JPG・GIF・WebP 対応</div>
-      </div>
-
-      <div class="img-preview" id="img-preview">
-        <img id="img-preview-img" src="" alt="">
-        <div class="img-preview-name" id="img-preview-name"></div>
-      </div>
-
-      <input class="img-alt-input" id="img-alt" placeholder="画像の説明文（alt）※省略可">
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-        <input class="img-alt-input" id="img-width" type="number" placeholder="幅（px）※省略で元サイズ" min="1" max="9999" style="margin-bottom:0;flex:1">
-        <span style="font-size:13px;color:var(--text-muted);white-space:nowrap">px</span>
-      </div>
-      <button class="img-upload-btn" id="img-upload-btn" onclick="uploadImage()" disabled>アップロードして挿入</button>
-      <div class="img-progress" id="img-progress"></div>
-    </div>
-  </div>
-
-
   <!-- 共有モーダル -->
   <div class="share-modal-overlay" id="share-modal" onclick="if(event.target===this)closeShareModal()">
     <div class="share-modal">
-      <div class="share-modal-title">
-        編集者を管理
-        <button class="share-modal-close" onclick="closeShareModal()">✕</button>
+      <div style="font-size:16px;font-weight:700;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+        編集者を管理 <button onclick="closeShareModal()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:20px">✕</button>
       </div>
       <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">追加した人はこの記事を編集できます。</div>
       <div id="share-user-list"><div style="color:var(--text-muted);font-size:13px">読み込み中...</div></div>
@@ -313,105 +320,51 @@
 
   <script type="module">
     import { toggleTheme, updateToggleButton } from 'https://dasopedia.f5.si/js/theme.js';
-    window.themeToggle = toggleTheme;
-    updateToggleButton();
     import { requireEditor } from 'https://dasopedia.f5.si/js/auth.js';
     import { db, rtdb } from 'https://dasopedia.f5.si/js/firebase.js';
     import { collection, doc, getDoc, addDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { applyCustomMarkdown } from 'https://dasopedia.f5.si/js/custom-markdown.js';
+
+    window.themeToggle = toggleTheme;
+    updateToggleButton();
 
     let currentUser, currentUserData;
     let isPublic = false;
     let editors  = [];
     let allUsers = {};
-    const params = new URLSearchParams(location.search);
+    const params    = new URLSearchParams(location.search);
     const articleId = params.get('id') || null;
     if (articleId) document.getElementById('nav-mode').textContent = '記事を編集';
 
+    // テーマ変更時にhighlight.jsテーマも切り替え
+    const origToggle = window.themeToggle;
+    window.themeToggle = function() { origToggle(); updateHljsTheme(); };
+    function updateHljsTheme() {
+      const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+      document.getElementById('hljs-light').disabled = dark;
+      document.getElementById('hljs-dark').disabled  = !dark;
+    }
+    updateHljsTheme();
+
+    // ===== トースト =====
     function showToast(msg, type = 'success') {
       const t = document.getElementById('toast');
       t.textContent = msg; t.className = `toast show ${type}`;
       setTimeout(() => t.className = 'toast', 3000);
     }
 
-    // 公開/非公開トグル
-    function syncVisibilityUI() {
-      const tog   = document.getElementById('visibility-toggle');
-      const label = document.getElementById('visibility-label');
-      if (isPublic) {
-        tog.classList.add('public');
-        label.textContent = '公開';
-      } else {
-        tog.classList.remove('public');
-        label.textContent = '非公開';
-      }
-    }
-
-    window.toggleVisibility = function() {
-      isPublic = !isPublic;
-      syncVisibilityUI();
+    // ===== プレビュー =====
+    window.updatePreview = function() {
+      const content = document.getElementById('editor').value || '';
+      let html = marked.parse(content);
+      html = applyCustomMarkdown(html);
+      document.getElementById('preview').innerHTML = html;
+      document.querySelectorAll('#preview pre code').forEach(el => hljs.highlightElement(el));
     };
 
-    // 共有モーダル
-    window.openShareModal = async function() {
-      document.getElementById('share-modal').classList.add('open');
-      renderShareList();
-    };
-    window.closeShareModal = () => document.getElementById('share-modal').classList.remove('open');
-
-    function renderShareList() {
-      const list = document.getElementById('share-user-list');
-      const canEdit = currentUserData.role === 'owner' || currentUserData.role === 'admin' || (articleId && currentUser);
-
-      // 作成者は常に最上位に表示
-      const rows = Object.entries(allUsers)
-        .filter(([uid, u]) => u.role !== 'banned' && !u.noShare)
-        .map(([uid, u]) => {
-          const isCreator  = uid === currentUser?.uid && !articleId ? true :
-                             u.role === 'owner' || u.role === 'admin';
-          const isEditor   = editors.includes(uid);
-          const isMe       = uid === currentUser?.uid;
-          return { uid, u, isEditor, isMe };
-        });
-
-      list.innerHTML = rows.map(({ uid, u, isEditor, isMe }) => {
-        const initial = (u.displayName || '?').charAt(0).toUpperCase();
-        let action = '';
-        if (isMe) {
-          action = '<span class="share-badge-owner">作成者</span>';
-        } else if (['owner','admin'].includes(u.role)) {
-          action = '<span class="share-badge-owner">常時編集可</span>';
-        } else if (isEditor) {
-          action = `<button class="share-btn-remove" onclick="removeEditor('${uid}')">削除</button>`;
-        } else {
-          action = `<button class="share-btn-add" onclick="addEditor('${uid}')">追加</button>`;
-        }
-        return `<div class="share-user-row">
-          <div class="share-user-info">
-            <div class="share-user-avatar">${initial}</div>
-            <div>
-              <div class="share-user-name">${u.displayName || '-'}${isMe ? ' (自分)' : ''}</div>
-              <div class="share-user-role">${u.role}</div>
-            </div>
-          </div>
-          ${action}
-        </div>`;
-      }).join('');
-    }
-
-    window.addEditor = function(uid) {
-      if (!editors.includes(uid)) { editors.push(uid); renderShareList(); }
-    };
-    window.removeEditor = function(uid) {
-      editors = editors.filter(e => e !== uid);
-      renderShareList();
-    };
-
-    window.updatePreview = () => {
-      document.getElementById('preview').innerHTML = marked.parse(document.getElementById('editor').value || '');
-    };
-
-    window.autoSlug = () => {
+    // ===== slug自動生成 =====
+    window.autoSlug = function() {
       if (articleId) return;
       const slug = document.getElementById('title-input').value
         .toLowerCase()
@@ -420,23 +373,123 @@
       document.getElementById('slug-input').value = slug;
     };
 
-    window.ins = (before, after) => {
-      const ta = document.getElementById('editor');
-      const s = ta.selectionStart, e = ta.selectionEnd;
-      ta.value = ta.value.slice(0, s) + before + ta.value.slice(s, e) + after + ta.value.slice(e);
-      ta.setSelectionRange(s + before.length, e + before.length);
+    // ===== ツールバー操作 =====
+    function getTA() { return document.getElementById('editor'); }
+
+    window.ins = function(before, after) {
+      const ta = getTA(), s = ta.selectionStart, e = ta.selectionEnd;
+      ta.value = ta.value.slice(0,s) + before + ta.value.slice(s,e) + after + ta.value.slice(e);
+      ta.setSelectionRange(s+before.length, e+before.length);
       ta.focus(); updatePreview();
     };
 
-    window.insLine = prefix => {
-      const ta = document.getElementById('editor');
-      const s = ta.selectionStart;
-      const lineStart = ta.value.lastIndexOf('\n', s - 1) + 1;
-      ta.value = ta.value.slice(0, lineStart) + prefix + ta.value.slice(lineStart);
-      ta.setSelectionRange(s + prefix.length, s + prefix.length);
+    window.insLine = function(prefix) {
+      const ta = getTA(), s = ta.selectionStart;
+      const ls = ta.value.lastIndexOf('\n', s-1) + 1;
+      ta.value = ta.value.slice(0,ls) + prefix + ta.value.slice(ls);
+      ta.setSelectionRange(s+prefix.length, s+prefix.length);
       ta.focus(); updatePreview();
     };
 
+    window.insWrap = function(before, after) {
+      const ta = getTA(), s = ta.selectionStart, e = ta.selectionEnd;
+      const sel = ta.value.slice(s,e) || 'テキスト';
+      ta.value = ta.value.slice(0,s) + before + sel + after + ta.value.slice(e);
+      ta.setSelectionRange(s+before.length, s+before.length+sel.length);
+      ta.focus(); updatePreview();
+    };
+
+    // ===== 色ツールバー =====
+    const COLORS = {
+      red:'#ef6c6c', blue:'#6c8bef', green:'#6cefb0', yellow:'#efb46c',
+      orange:'#f0965a', purple:'#b06cef', pink:'#ef6cb0', gray:'#7b7f96',
+    };
+    const colorGrid = document.getElementById('color-grid');
+    Object.entries(COLORS).forEach(([name, hex]) => {
+      const btn = document.createElement('button');
+      btn.className = 'tb-color';
+      btn.style.background = hex;
+      btn.title = name;
+      btn.onclick = () => { applyColor(name); toggleColorPopup(); };
+      colorGrid.appendChild(btn);
+    });
+
+    window.toggleColorPopup = function(e) {
+      if (e) e.stopPropagation();
+      document.getElementById('color-popup').classList.toggle('open');
+      document.getElementById('size-popup').classList.remove('open');
+    };
+    window.toggleSizePopup = function(e) {
+      if (e) e.stopPropagation();
+      document.getElementById('size-popup').classList.toggle('open');
+      document.getElementById('color-popup').classList.remove('open');
+    };
+
+    window.applyColor = function(name) {
+      insWrap(`{${name}}`, `{/${name}}`);
+      document.getElementById('color-popup').classList.remove('open');
+    };
+    window.applyCustomColor = function() {
+      const hex = document.getElementById('custom-color').value;
+      insWrap(`{color:${hex}}`, `{/color}`);
+      document.getElementById('color-popup').classList.remove('open');
+    };
+    window.applySize = function(name) {
+      insWrap(`{${name}}`, `{/${name}}`);
+      document.getElementById('size-popup').classList.remove('open');
+    };
+
+    // ===== .mdファイル読み込み =====
+    window.loadMdFile = function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        document.getElementById('editor').value = ev.target.result;
+        updatePreview();
+        showToast(`${file.name} を読み込みました`);
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    };
+
+    // ===== 公開/非公開 =====
+    function syncVisibilityUI() {
+      const tog = document.getElementById('visibility-toggle');
+      const lbl = document.getElementById('visibility-label');
+      tog.classList.toggle('public', isPublic);
+      lbl.textContent = isPublic ? '公開' : '非公開';
+    }
+    window.toggleVisibility = function() { isPublic = !isPublic; syncVisibilityUI(); };
+
+    // ===== 共有モーダル =====
+    window.openShareModal = function() {
+      document.getElementById('share-modal').classList.add('open');
+      renderShareList();
+    };
+    window.closeShareModal = () => document.getElementById('share-modal').classList.remove('open');
+
+    function renderShareList() {
+      const list = document.getElementById('share-user-list');
+      const rows = Object.entries(allUsers).filter(([, u]) => u.role !== 'banned' && !u.noShare);
+      list.innerHTML = rows.map(([uid, u]) => {
+        const isEditor  = editors.includes(uid);
+        const isAdminUp = ['owner','admin'].includes(u.role);
+        const isMe      = uid === currentUser?.uid;
+        const initial   = (u.displayName || '?').charAt(0).toUpperCase();
+        let action = '';
+        if (isMe || isAdminUp) action = `<span style="font-size:11px;color:var(--text-muted);padding:4px 8px">${isMe ? '作成者' : '常時編集可'}</span>`;
+        else if (isEditor) action = `<button class="share-btn-remove" onclick="removeEditor('${uid}')">削除</button>`;
+        else action = `<button class="share-btn-add" onclick="addEditor('${uid}')">追加</button>`;
+        return `<div class="share-user-row">
+          <div class="share-user-info">
+            <div class="share-avatar">${initial}</div>
+            <div><div style="font-size:14px;font-weight:500">${u.displayName || '-'}</div><div style="font-size:11px;color:var(--text-muted)">${u.role}</div></div>
+          </div>${action}</div>`;
+      }).join('');
+    }
+    window.addEditor    = uid => { if (!editors.includes(uid)) { editors.push(uid); renderShareList(); } };
+    window.removeEditor = uid => { editors = editors.filter(e => e !== uid); renderShareList(); };
 
     // ===== 画像アップロード =====
     let selectedFile = null;
@@ -444,55 +497,36 @@
 
     async function loadGithubConfig() {
       if (githubConfig) return githubConfig;
-      try {
-        const snap = await get(ref(rtdb, 'config/github'));
-        if (!snap.exists()) throw new Error('GitHub設定が見つかりません。RTDBのconfig/githubを確認してください。');
-        githubConfig = snap.val();
-        return githubConfig;
-      } catch (e) {
-        throw new Error('GitHub設定の読み込みに失敗しました: ' + e.message);
-      }
+      const snap = await get(ref(rtdb, 'config/github'));
+      if (!snap.exists()) throw new Error('GitHub設定が見つかりません');
+      githubConfig = snap.val();
+      return githubConfig;
     }
 
     window.openImgModal = function() {
       selectedFile = null;
       document.getElementById('img-preview').style.display = 'none';
       document.getElementById('img-alt').value = '';
+      document.getElementById('img-width').value = '';
       document.getElementById('img-upload-btn').disabled = true;
       document.getElementById('img-progress').className = 'img-progress';
-      document.getElementById('img-progress').textContent = '';
-      document.getElementById('img-width').value = '';
       document.getElementById('img-file-input').value = '';
-      document.getElementById('img-drop-zone').querySelector('.img-drop-text').textContent = 'クリックまたはドラッグ＆ドロップで画像を選択\nPNG・JPG・GIF・WebP 対応';
       document.getElementById('img-modal').classList.add('open');
     };
     window.closeImgModal = () => document.getElementById('img-modal').classList.remove('open');
 
-    window.onDragOver = function(e) {
-      e.preventDefault();
-      document.getElementById('img-drop-zone').classList.add('drag-over');
-    };
-    window.onDragLeave = function() {
-      document.getElementById('img-drop-zone').classList.remove('drag-over');
-    };
-    window.onDrop = function(e) {
-      e.preventDefault();
-      document.getElementById('img-drop-zone').classList.remove('drag-over');
-      const file = e.dataTransfer.files[0];
-      if (file && file.type.startsWith('image/')) setFile(file);
-    };
-    window.onFileSelect = function(e) {
-      const file = e.target.files[0];
-      if (file) setFile(file);
-    };
+    window.onDragOver  = e => { e.preventDefault(); document.getElementById('img-drop-zone').classList.add('drag-over'); };
+    window.onDragLeave = () => document.getElementById('img-drop-zone').classList.remove('drag-over');
+    window.onDrop      = e => { e.preventDefault(); document.getElementById('img-drop-zone').classList.remove('drag-over'); const f = e.dataTransfer.files[0]; if (f?.type.startsWith('image/')) setFile(f); };
+    window.onFileSelect = e => { const f = e.target.files[0]; if (f) setFile(f); };
 
     function setFile(file) {
       selectedFile = file;
       const reader = new FileReader();
       reader.onload = ev => {
         document.getElementById('img-preview-img').src = ev.target.result;
-        document.getElementById('img-preview-name').textContent = file.name;
         document.getElementById('img-preview').style.display = 'block';
+        document.getElementById('img-preview-name') && (document.getElementById('img-preview-name').textContent = file.name);
       };
       reader.readAsDataURL(file);
       document.getElementById('img-upload-btn').disabled = false;
@@ -500,85 +534,50 @@
 
     window.uploadImage = async function() {
       if (!selectedFile) return;
-      const btn      = document.getElementById('img-upload-btn');
-      const progress = document.getElementById('img-progress');
-      btn.disabled = true;
-      btn.textContent = 'アップロード中...';
-      progress.textContent = 'GitHub設定を読み込み中...';
-      progress.className = 'img-progress show';
-
+      const btn = document.getElementById('img-upload-btn');
+      const prog = document.getElementById('img-progress');
+      btn.disabled = true; btn.textContent = 'アップロード中...';
+      prog.textContent = 'GitHub設定を読み込み中...'; prog.className = 'img-progress show';
       try {
         const cfg = await loadGithubConfig();
-
-        // ファイル名：タイムスタンプ+元のファイル名でユニーク化
-        const ext      = selectedFile.name.split('.').pop();
         const safeName = selectedFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
         const filename = `images/${Date.now()}_${safeName}`;
         const apiUrl   = `https://api.github.com/repos/${cfg.repo}/contents/${filename}`;
-
-        progress.textContent = '画像を変換中...';
-
-        // Base64エンコード
-        const base64 = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result.split(',')[1]);
-          reader.onerror = reject;
-          reader.readAsDataURL(selectedFile);
+        prog.textContent = '変換中...';
+        const base64 = await new Promise((res, rej) => {
+          const r = new FileReader();
+          r.onload = () => res(r.result.split(',')[1]);
+          r.onerror = rej;
+          r.readAsDataURL(selectedFile);
         });
-
-        progress.textContent = 'GitHubにアップロード中...';
-
+        prog.textContent = 'GitHubにアップロード中...';
         const res = await fetch(apiUrl, {
           method: 'PUT',
-          headers: {
-            'Authorization': `token ${cfg.token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            message: `Upload image: ${safeName}`,
-            content: base64,
-            branch: cfg.branch || 'main'
-          })
+          headers: { 'Authorization': `token ${cfg.token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: `Upload: ${safeName}`, content: base64, branch: cfg.branch || 'main' })
         });
-
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.message || 'アップロードに失敗しました');
-        }
-
-        const data = await res.json();
+        if (!res.ok) { const err = await res.json(); throw new Error(err.message); }
         const rawUrl = `https://raw.githubusercontent.com/${cfg.repo}/${cfg.branch || 'main'}/${filename}`;
-        const alt    = document.getElementById('img-alt').value.trim() || safeName;
-        const width  = document.getElementById('img-width').value.trim();
-        const mdText = width
-          ? `<img src="${rawUrl}" alt="${alt}" width="${width}">`
-          : `<img src="${rawUrl}" alt="${alt}">`;
-
-        // エディタにMarkdownを挿入
-        const ta = document.getElementById('editor');
-        const s  = ta.selectionStart;
-        ta.value = ta.value.slice(0, s) + mdText + ta.value.slice(s);
-        ta.setSelectionRange(s + mdText.length, s + mdText.length);
-        ta.focus();
-        updatePreview();
-
+        const alt   = document.getElementById('img-alt').value.trim() || safeName;
+        const width = document.getElementById('img-width').value.trim();
+        const tag   = width ? `<img src="${rawUrl}" alt="${alt}" width="${width}">` : `<img src="${rawUrl}" alt="${alt}">`;
+        const ta = getTA(), s = ta.selectionStart;
+        ta.value = ta.value.slice(0,s) + tag + ta.value.slice(s);
+        ta.setSelectionRange(s+tag.length, s+tag.length);
+        ta.focus(); updatePreview();
         showToast('画像をアップロードしました！');
         closeImgModal();
-      } catch (e) {
-        progress.textContent = `エラー: ${e.message}`;
-        progress.style.color = 'var(--error)';
-        btn.disabled = false;
-        btn.textContent = 'アップロードして挿入';
+      } catch(e) {
+        prog.textContent = `エラー: ${e.message}`; prog.style.color = 'var(--error)';
+        btn.disabled = false; btn.textContent = 'アップロードして挿入';
       }
     };
 
     // ===== 画像サイズ変更 =====
-    let selectedImgIndex = -1;
-    let detectedImgs = [];
+    let selectedImgIndex = -1, detectedImgs = [];
 
     function detectImgs() {
-      const val = document.getElementById('editor').value;
-      const re  = /<img[^>]*>/g;
+      const val = getTA().value, re = /<img[^>]*>/g;
       detectedImgs = [];
       let m;
       while ((m = re.exec(val)) !== null) {
@@ -586,7 +585,7 @@
         const src   = (tag.match(/src="([^"]*)"/) || [])[1] || '';
         const alt   = (tag.match(/alt="([^"]*)"/) || [])[1] || '';
         const width = (tag.match(/width="([^"]*)"/) || [])[1] || '';
-        const name  = src.split('/').pop().split('?')[0].slice(0, 40);
+        const name  = src.split('/').pop().slice(0, 40);
         detectedImgs.push({ tag, start: m.index, end: m.index + tag.length, src, alt, width, name });
       }
       return detectedImgs;
@@ -595,89 +594,67 @@
     window.openResizeModal = function() {
       selectedImgIndex = -1;
       document.getElementById('resize-editor').style.display = 'none';
-      const imgs  = detectImgs();
-      const list  = document.getElementById('resize-img-list');
-      if (!imgs.length) {
-        list.innerHTML = '<div style="font-size:13px;color:var(--text-muted);text-align:center;padding:16px">記事内に画像が見つかりません。</div>';
-      } else {
+      const imgs = detectImgs();
+      const list = document.getElementById('resize-img-list');
+      if (!imgs.length) { list.innerHTML = '<div style="font-size:13px;color:var(--text-muted);text-align:center;padding:16px">画像が見つかりません</div>'; }
+      else {
         list.innerHTML = imgs.map((img, i) =>
-          `<button onclick="selectImg(${i})" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:left;cursor:pointer;font-family:var(--font);transition:border-color 0.15s;width:100%" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px">${img.alt || img.name || '画像' + (i+1)}</div>
-            <div style="font-size:11px;color:var(--text-muted)">${img.width ? '現在の幅: ' + img.width + 'px' : '幅指定なし'}</div>
+          `<button onclick="selectImg(${i})" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:left;cursor:pointer;font-family:var(--font);width:100%">
+            <div style="font-size:13px;font-weight:600;margin-bottom:2px">${img.alt || img.name || '画像'+(i+1)}</div>
+            <div style="font-size:11px;color:var(--text-muted)">${img.width ? '現在: '+img.width+'px' : '幅指定なし'}</div>
           </button>`
         ).join('');
       }
       document.getElementById('resize-modal').classList.add('open');
     };
-
+    window.closeResizeModal = () => document.getElementById('resize-modal').classList.remove('open');
     window.selectImg = function(i) {
       selectedImgIndex = i;
       const img = detectedImgs[i];
       document.getElementById('resize-width').value = img.width || '';
-      document.getElementById('resize-target-label').textContent =
-        '対象: ' + (img.alt || img.name || '画像' + (i+1)) + (img.width ? ' (現在 ' + img.width + 'px)' : ' (幅指定なし)');
+      document.getElementById('resize-target-label').textContent = '対象: ' + (img.alt || img.name || '画像'+(i+1));
       document.getElementById('resize-editor').style.display = 'block';
     };
-
-    window.closeResizeModal = () => document.getElementById('resize-modal').classList.remove('open');
-
     window.applyResize = function() {
       const width = document.getElementById('resize-width').value.trim();
-      if (!width) { alert('幅を入力してください。'); return; }
-      if (selectedImgIndex < 0) return;
-
-      const img = detectedImgs[selectedImgIndex];
-      let newTag = img.tag;
-      if (/width="[^"]*"/.test(newTag)) {
-        newTag = newTag.replace(/width="[^"]*"/, 'width="' + width + '"');
-      } else {
-        newTag = newTag.replace('<img ', '<img width="' + width + '" ');
-      }
-
-      const ta  = document.getElementById('editor');
-      // 最新の位置を再検出（編集で位置がずれている可能性があるため）
-      const freshImgs = detectImgs();
-      const fresh = freshImgs[selectedImgIndex];
-      if (!fresh) { alert('画像が見つかりません。'); return; }
+      if (!width || selectedImgIndex < 0) return;
+      const fresh = detectImgs()[selectedImgIndex];
+      if (!fresh) return;
+      let newTag = fresh.tag;
+      newTag = /width="[^"]*"/.test(newTag) ? newTag.replace(/width="[^"]*"/, `width="${width}"`) : newTag.replace('<img ', `<img width="${width}" `);
+      const ta = getTA();
       ta.value = ta.value.slice(0, fresh.start) + newTag + ta.value.slice(fresh.end);
-      updatePreview();
-      closeResizeModal();
+      updatePreview(); closeResizeModal();
     };
-
     window.removeWidth = function() {
       if (selectedImgIndex < 0) return;
-      const freshImgs = detectImgs();
-      const fresh = freshImgs[selectedImgIndex];
+      const fresh = detectImgs()[selectedImgIndex];
       if (!fresh) return;
       const newTag = fresh.tag.replace(/\s*width="[^"]*"/, '');
-      const ta = document.getElementById('editor');
+      const ta = getTA();
       ta.value = ta.value.slice(0, fresh.start) + newTag + ta.value.slice(fresh.end);
-      updatePreview();
-      closeResizeModal();
+      updatePreview(); closeResizeModal();
     };
 
-    window.doSave = async () => {
+    // ===== 保存 =====
+    window.doSave = async function() {
       const title   = document.getElementById('title-input').value.trim();
       const slug    = document.getElementById('slug-input').value.trim();
-      const content = document.getElementById('editor').value;
+      const content = getTA().value;
       const tags    = document.getElementById('tags-input').value.split(',').map(t => t.trim()).filter(Boolean);
-      if (!title)        { showToast('タイトルを入力してください。', 'error'); return; }
-      if (!slug)         { showToast('スラグを入力してください。', 'error'); return; }
-      if (!content.trim()){ showToast('本文を入力してください。', 'error'); return; }
-
+      if (!title)  { showToast('タイトルを入力してください。', 'error'); return; }
+      if (!slug)   { showToast('スラグを入力してください。', 'error'); return; }
+      if (!content.trim()) { showToast('本文を入力してください。', 'error'); return; }
       const btn = document.getElementById('saveBtn');
       btn.disabled = true; btn.textContent = '保存中...';
-
-      const contentText = content.replace(/[#*`_~\[\]()>!]/g, '').replace(/\s+/g, ' ').trim();
-
+      const contentText = content.replace(/[#*`_~\[\]()>!{}]/g, '').replace(/\s+/g, ' ').trim();
       try {
         if (articleId) {
           await updateDoc(doc(db, 'articles', articleId), { title, slug, content, contentText, tags, isPublic, editors, updatedAt: serverTimestamp() });
           showToast('保存しました！');
         } else {
           await addDoc(collection(db, 'articles'), {
-            title, slug, content, contentText, tags,
-            isPublic, editors,
+            title, slug, content, contentText, tags, isPublic, editors,
             createdBy: currentUser.uid,
             createdByName: currentUserData.displayName || currentUser.displayName || '',
             createdAt: serverTimestamp(), updatedAt: serverTimestamp()
@@ -685,28 +662,22 @@
           showToast('記事を作成しました！');
           setTimeout(() => window.location.href = `/wiki/article/?slug=${encodeURIComponent(slug)}`, 1200);
         }
-      } catch (e) {
-        showToast(`保存に失敗しました: ${e.message}`, 'error');
-      }
+      } catch(e) { showToast(`保存に失敗しました: ${e.message}`, 'error'); }
       btn.disabled = false; btn.textContent = '保存';
     };
 
-    document.addEventListener('keydown', e => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); doSave(); }
-    });
+    // Cmd/Ctrl+S で保存
+    document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); doSave(); } });
 
+    // ===== 初期化 =====
     requireEditor(async (user, userData) => {
       currentUser = user; currentUserData = userData;
-
-      // 全ユーザー読み込み（共有モーダル用）
       try {
         const snap = await get(ref(rtdb, 'users'));
         if (snap.exists()) allUsers = snap.val();
-      } catch(e) { console.warn('users load failed:', e); }
-
-      // 共有ボタンを表示（編集ページのみ）
-      if (articleId) document.getElementById('share-btn').style.display = 'block';
+      } catch(e) {}
       if (articleId) {
+        document.getElementById('share-btn').style.display = 'block';
         try {
           const snap = await getDoc(doc(db, 'articles', articleId));
           if (snap.exists()) {
@@ -714,13 +685,13 @@
             document.getElementById('title-input').value = d.title || '';
             document.getElementById('slug-input').value  = d.slug  || '';
             document.getElementById('tags-input').value  = (d.tags || []).join(', ');
-            document.getElementById('editor').value      = d.content || '';
+            getTA().value = d.content || '';
             isPublic = d.isPublic || false;
             editors  = d.editors  || [];
             syncVisibilityUI();
             updatePreview();
           }
-        } catch (e) { showToast('記事の読み込みに失敗しました。', 'error'); }
+        } catch(e) { showToast('記事の読み込みに失敗しました。', 'error'); }
       }
     });
   </script>

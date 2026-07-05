@@ -4,174 +4,110 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>記事 — Dasopedia</title>
+  <script>(function(){ document.documentElement.setAttribute('data-theme', localStorage.getItem('dasopedia-theme') || 'light'); })();</script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hljs-light">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hljs-dark" disabled>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    /* ===== テーマ変数 ===== */
-    [data-theme="light"] {
-      --bg: #f5f6fa;
-      --surface: #ffffff;
-      --border: #e2e4ed;
-      --accent: #4f6de0;
-      --accent-hover: #3d5acc;
-      --text: #1a1d2e;
-      --text-muted: #6b7080;
-      --error: #d63b3b;
-      --success: #2a9d6f;
-      --font: 'Inter', 'Hiragino Sans', sans-serif;
-    }
-    [data-theme="dark"] {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --border: #2a2d3e;
-      --accent: #6c8bef;
-      --accent-hover: #8aa3f5;
-      --text: #e8eaf0;
-      --text-muted: #7b7f96;
-      --error: #ef6c6c;
-      --success: #6cefb0;
-      --font: 'Inter', 'Hiragino Sans', sans-serif;
-    }
-    body { background: var(--bg); color: var(--text); font-family: var(--font); }
+    [data-theme="light"] { --bg: #f5f6fa; --surface: #ffffff; --border: #e2e4ed; --accent: #4f6de0; --accent-hover: #3d5acc; --text: #1a1d2e; --text-muted: #6b7080; --error: #d63b3b; --font: 'Inter', 'Hiragino Sans', sans-serif; --font-mono: 'JetBrains Mono', monospace; }
+    [data-theme="dark"]  { --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3e; --accent: #6c8bef; --accent-hover: #8aa3f5; --text: #e8eaf0; --text-muted: #7b7f96; --error: #ef6c6c; --font: 'Inter', 'Hiragino Sans', sans-serif; --font-mono: 'JetBrains Mono', monospace; }
+    [data-theme="light"] #hljs-dark  { display: none; }
+    [data-theme="dark"]  #hljs-light { display: none; }
+    [data-theme="dark"]  #hljs-dark  { display: block; }
+
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; display: flex; flex-direction: column; }
     nav { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 56px; position: sticky; top: 0; z-index: 100; }
     .nav-logo { font-size: 16px; font-weight: 700; color: var(--text); text-decoration: none; }
     .nav-logo span { color: var(--accent); }
-    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
     .nav-link { color: var(--text-muted); font-size: 13px; text-decoration: none; }
     .nav-link:hover { color: var(--text); }
     .btn-sm { background: var(--accent); border: none; border-radius: 7px; color: #fff; cursor: pointer; font-family: var(--font); font-size: 13px; font-weight: 600; padding: 7px 14px; text-decoration: none; }
-    .main { max-width: 800px; margin: 0 auto; padding: 48px 24px; flex: 1; }
-    .breadcrumb { font-size: 12px; color: var(--text-muted); margin-bottom: 24px; }
+    .btn-icon { background: none; border: 1px solid var(--border); border-radius: 7px; color: var(--text); cursor: pointer; font-size: 15px; padding: 5px 10px; }
+    #hamburger { display: none; background: none; border: 1px solid var(--border); border-radius: 7px; color: var(--text); cursor: pointer; font-size: 18px; padding: 5px 10px; }
+    #mobile-menu { display: none; }
+
+    /* レイアウト */
+    .page-layout { display: flex; flex: 1; max-width: 1100px; width: 100%; margin: 0 auto; padding: 40px 24px; gap: 40px; }
+
+    /* 目次サイドバー */
+    .toc-sidebar { width: 220px; flex-shrink: 0; }
+    .toc-sticky { position: sticky; top: 72px; }
+    .toc-title { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
+    .toc-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+    .toc-item a { color: var(--text-muted); font-size: 13px; text-decoration: none; display: block; padding: 3px 0 3px 8px; border-left: 2px solid transparent; transition: all 0.15s; line-height: 1.4; }
+    .toc-item a:hover { color: var(--accent); border-left-color: var(--accent); }
+    .toc-item.active a { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+    .toc-item.h3 a { padding-left: 20px; font-size: 12px; }
+
+    /* 記事本文 */
+    .article-main { flex: 1; min-width: 0; }
+    .breadcrumb { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; }
     .breadcrumb a { color: var(--accent); text-decoration: none; }
-    .article-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
-    h1 { font-size: 32px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 12px; }
-    .meta { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; }
-    .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .article-header { margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .article-header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 10px; line-height: 1.3; }
+    .article-meta { font-size: 13px; color: var(--text-muted); margin-bottom: 12px; }
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
     .tag { background: rgba(108,139,239,0.12); border: 1px solid rgba(108,139,239,0.25); border-radius: 4px; color: var(--accent); font-size: 11px; font-weight: 600; padding: 2px 8px; }
-    .article-actions { display: flex; gap: 10px; margin-top: 16px; }
-    .btn-edit { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; color: var(--text); cursor: pointer; font-family: var(--font); font-size: 13px; padding: 7px 14px; text-decoration: none; transition: border-color 0.15s; }
-    .btn-edit:hover { border-color: var(--accent); }
-    .btn-delete { background: rgba(239,108,108,0.1); border: 1px solid rgba(239,108,108,0.25); border-radius: 7px; color: #ef6c6c; cursor: pointer; font-family: var(--font); font-size: 13px; padding: 7px 14px; display: none; }
-    .article-body { line-height: 1.8; font-size: 15px; }
-    .article-body h2 { font-size: 20px; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin: 28px 0 12px; }
-    .article-body h3 { font-size: 17px; margin: 24px 0 10px; }
+    .private-badge { background: rgba(239,180,108,0.12); border: 1px solid rgba(239,180,108,0.3); border-radius: 4px; color: #b07d00; font-size: 11px; font-weight: 700; padding: 3px 8px; margin-left: 8px; }
+    [data-theme="dark"] .private-badge { color: #efb46c; }
+    .article-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-edit { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; color: var(--text-muted); font-family: var(--font); font-size: 13px; padding: 7px 14px; text-decoration: none; transition: border-color 0.15s; }
+    .btn-edit:hover { border-color: var(--accent); color: var(--text); }
+    .btn-delete { background: rgba(214,59,59,0.08); border: 1px solid rgba(214,59,59,0.25); border-radius: 7px; color: var(--error); cursor: pointer; font-family: var(--font); font-size: 13px; padding: 7px 14px; display: none; transition: background 0.15s; }
+    .btn-delete:hover { background: rgba(214,59,59,0.18); }
+
+    /* 記事本文スタイル */
+    .article-body { line-height: 1.85; font-size: 15px; }
+    .article-body h1 { font-size: 26px; font-weight: 700; margin: 32px 0 12px; letter-spacing: -0.02em; }
+    .article-body h2 { font-size: 20px; font-weight: 700; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin: 28px 0 12px; }
+    .article-body h3 { font-size: 17px; font-weight: 700; margin: 22px 0 10px; }
     .article-body p { margin-bottom: 16px; }
     .article-body ul, .article-body ol { margin: 0 0 16px 24px; }
+    .article-body li { margin-bottom: 4px; }
     .article-body code { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-mono); font-size: 13px; padding: 2px 6px; }
     .article-body pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin: 16px 0; overflow-x: auto; }
-    .article-body pre code { background: none; border: none; padding: 0; }
+    .article-body pre code { background: none; border: none; padding: 0; font-size: 13px; }
     .article-body blockquote { border-left: 3px solid var(--accent); margin: 16px 0; padding: 8px 20px; color: var(--text-muted); }
     .article-body a { color: var(--accent); }
     .article-body table { border-collapse: collapse; width: 100%; margin: 16px 0; }
     .article-body th, .article-body td { border: 1px solid var(--border); padding: 10px 14px; }
     .article-body th { background: var(--surface); font-weight: 600; }
+    .article-body img { max-width: 100%; border-radius: 6px; margin: 8px 0; }
     .not-found { text-align: center; padding: 80px 24px; color: var(--text-muted); }
 
-    /* ===== レスポンシブ ===== */
-    @media (max-width: 640px) {
-      nav { padding: 0 16px; height: auto; min-height: 56px; flex-wrap: wrap; gap: 0; }
-      .nav-right { gap: 8px; }
-      .nav-search { width: 120px; }
-      .main { padding: 24px 16px; }
-      .hero h1 { font-size: 26px; }
-      .hero-sub { font-size: 14px; }
-      .stats { grid-template-columns: 1fr 1fr; gap: 10px; }
-      .menu-grid { grid-template-columns: 1fr; }
-      .filters { flex-direction: column; }
-      .meta-row { flex-direction: column; }
-      .search-row { flex-direction: column; }
-      .detail-fields { grid-template-columns: 1fr; }
-      .article-grid { gap: 8px; }
-      .article-card { padding: 14px 16px; }
-      table { font-size: 12px; display: block; overflow-x: auto; }
-      th, td { padding: 8px 10px; white-space: nowrap; }
-      .card { padding: 28px 20px; }
-      .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
-      .page-header > div { width: 100%; }
-      .page-header > div button { width: 100%; }
-      h1 { font-size: 20px; }
-      .doc-nav ol { gap: 4px; }
-    }
-
-    /* ハンバーガーメニュー */
-    #hamburger { display: none; }
-    @media (max-width: 640px) {
-      #hamburger { display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--border); border-radius: 7px; color: var(--text); cursor: pointer; font-size: 18px; padding: 5px 10px; margin-left: auto; }
-      #nav-menu {
-        display: none; flex-direction: column; align-items: flex-start;
-        position: absolute; top: 56px; left: 0; right: 0;
-        background: var(--surface); border-bottom: 1px solid var(--border);
-        padding: 4px 0; z-index: 300; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      }
-      #nav-menu.open { display: flex; }
-      #nav-menu > .nav-link,
-      #nav-menu > .btn-sm,
-      #nav-menu > .tb,
-      #nav-menu > button:not(#hamburger) {
-        width: 100% !important; padding: 12px 20px !important;
-        border-radius: 0 !important; border-left: none !important;
-        border-right: none !important; border-top: none !important;
-        border-bottom: 1px solid var(--border) !important;
-        font-size: 14px !important; text-align: left; box-sizing: border-box;
-      }
-      #nav-menu > .nav-link:last-child,
-      #nav-menu > button:last-child { border-bottom: none !important; }
-      #nav-menu > .avatar-wrap {
-        padding: 8px 16px !important;
-        border-bottom: 1px solid var(--border) !important;
-        position: relative !important;
-      }
-      #nav-menu > .avatar-wrap .avatar-dropdown {
-        position: absolute !important;
-        top: calc(100% + 4px) !important;
-        right: 16px !important;
-        left: auto !important;
-      }
-      #nav-menu .btn-sm { background: none !important; color: var(--accent) !important; }
-      #nav-menu .avatar-wrap { padding: 8px 20px !important; }
-    }
-
-    .private-badge { background: rgba(239,180,108,0.12); border: 1px solid rgba(239,180,108,0.3); border-radius: 5px; color: #b07d00; font-size: 11px; font-weight: 700; padding: 3px 8px; letter-spacing: 0.04em; margin-left: 8px; }
-    [data-theme="dark"] .private-badge { color: #efb46c; }
-
+    /* 共有モーダル */
     .share-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
     .share-modal-overlay.open { display: flex; }
     .share-modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 100%; max-width: 440px; max-height: 80vh; overflow-y: auto; }
     .share-user-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
     .share-user-row:last-child { border-bottom: none; }
-    .share-user-info { display: flex; align-items: center; gap: 10px; }
     .share-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
     .share-btn-add { background: rgba(79,109,224,0.1); border: 1px solid rgba(79,109,224,0.3); border-radius: 6px; color: var(--accent); cursor: pointer; font-family: var(--font); font-size: 12px; font-weight: 600; padding: 5px 12px; }
     .share-btn-remove { background: rgba(214,59,59,0.08); border: 1px solid rgba(214,59,59,0.25); border-radius: 6px; color: var(--error); cursor: pointer; font-family: var(--font); font-size: 12px; padding: 5px 12px; }
+
+    @media (max-width: 768px) {
+      .toc-sidebar { display: none; }
+      .page-layout { padding: 24px 16px; }
+    }
+    @media (max-width: 680px) {
+      nav { padding: 0 16px; }
+      .nav-right { display: none; }
+      #hamburger { display: flex; align-items: center; justify-content: center; }
+      #mobile-menu { display: none; flex-direction: column; position: absolute; top: 56px; left: 0; right: 0; background: var(--surface); border-bottom: 1px solid var(--border); padding: 4px 0; z-index: 300; }
+      #mobile-menu.open { display: flex; }
+      #mobile-menu .mob-item { padding: 13px 20px; font-size: 14px; color: var(--text-muted); text-decoration: none; border-bottom: 1px solid var(--border); display: block; }
+      #mobile-menu .mob-item.accent { color: var(--accent); font-weight: 600; }
+      #mobile-menu .mob-item.danger { color: #ef6c6c; }
+    }
   </style>
-  <!-- テーマ初期化（ちらつき防止のため最初に実行） -->
   <script>
-    (function() {
-      const t = localStorage.getItem('dasopedia-theme') || 'light';
-      document.documentElement.setAttribute('data-theme', t);
-    })();
-  </script>
-  <script>
-    function toggleNav() {
-      var m = document.getElementById('nav-menu');
-      if (m) m.classList.toggle('open');
-    }
+    function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('open'); }
     document.addEventListener('click', function(e) {
-      if (!e.target.closest('nav')) {
-        var m = document.getElementById('nav-menu');
-        if (m) m.classList.remove('open');
-      }
-    });
-  </script>
-  <script>
-    function toggleNav() {
-      var m = document.getElementById('nav-menu');
-      if (m) m.classList.toggle('open');
-    }
-    document.addEventListener('click', function(e) {
-      if (!e.target.closest('nav')) {
-        var m = document.getElementById('nav-menu');
-        if (m) m.classList.remove('open');
+      if (!e.target.closest('nav') && !e.target.closest('#mobile-menu')) {
+        var m = document.getElementById('mobile-menu'); if (m) m.classList.remove('open');
       }
     });
   </script>
@@ -179,39 +115,118 @@
 <body>
   <nav>
     <a class="nav-logo" href="/"><span>D</span>asopedia</a>
-    <button id="hamburger" onclick="toggleNav()">☰</button>
-    <div id="nav-menu">
+    <div class="nav-right">
       <a class="nav-link" href="/wiki/">記事一覧</a>
       <a class="nav-link" href="/search/">検索</a>
       <a class="btn-sm" href="/edit/">+ 記事を書く</a>
-      <button id="theme-toggle" onclick="window.themeToggle()" title="テーマ切り替え" style="background:none;border:1px solid var(--border);border-radius:7px;color:var(--text);cursor:pointer;font-size:15px;padding:5px 10px;transition:border-color 0.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">🌙</button>
+      <button class="btn-icon" id="theme-toggle" onclick="window.themeToggle()">🌙</button>
       <a class="nav-link" href="#" onclick="doLogout()">ログアウト</a>
     </div>
+    <button id="hamburger" onclick="toggleMobileMenu()">☰</button>
   </nav>
-  <div class="main" id="main"><div style="color:var(--text-muted);text-align:center;padding:80px">読み込み中...</div></div>
+
+  <div id="mobile-menu">
+    <a class="mob-item" href="/wiki/">記事一覧</a>
+    <a class="mob-item" href="/search/">検索</a>
+    <a class="mob-item accent" href="/edit/">+ 記事を書く</a>
+    <a class="mob-item" href="#" onclick="window.themeToggle()">🌙 テーマ切り替え</a>
+    <a class="mob-item danger" href="#" onclick="doLogout()">ログアウト</a>
+  </div>
+
+  <div class="page-layout" id="page-layout">
+    <div style="color:var(--text-muted);text-align:center;padding:80px;width:100%">読み込み中...</div>
+  </div>
+
+  <footer style="border-top:1px solid var(--border);padding:24px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <span style="font-size:12px;color:var(--text-muted)">© Dasopedia</span>
+    <div style="display:flex;gap:16px">
+      <a href="/legal/" style="font-size:12px;color:var(--text-muted);text-decoration:none">利用規約</a>
+      <a href="/legal/privacy/" style="font-size:12px;color:var(--text-muted);text-decoration:none">プライバシーポリシー</a>
+    </div>
+  </footer>
+
+  <!-- 共有モーダル -->
+  <div class="share-modal-overlay" id="share-modal" onclick="if(event.target===this)closeShareModal()">
+    <div class="share-modal">
+      <div style="font-size:16px;font-weight:700;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+        編集者を管理 <button onclick="closeShareModal()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:20px">✕</button>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">追加した人はこの記事を編集できます。</div>
+      <div id="share-list"></div>
+    </div>
+  </div>
+
   <script type="module">
     import { toggleTheme, updateToggleButton } from 'https://dasopedia.f5.si/js/theme.js';
-    window.themeToggle = toggleTheme;
-    updateToggleButton();
     import { requireAuth, logout } from 'https://dasopedia.f5.si/js/auth.js';
     import { db, rtdb } from 'https://dasopedia.f5.si/js/firebase.js';
     import { collection, query, where, getDocs, deleteDoc, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { applyCustomMarkdown } from 'https://dasopedia.f5.si/js/custom-markdown.js';
 
+    window.themeToggle = toggleTheme;
+    window.doLogout = logout;
+    updateToggleButton();
 
-    let currentArticleId = null;
-    let currentEditors   = [];
-    let allUsersCache    = {};
+    // テーマ変更時にhighlight.jsも切り替え
+    const origToggle = window.themeToggle;
+    window.themeToggle = function() { origToggle(); updateHljsTheme(); };
+    function updateHljsTheme() {
+      const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+      document.getElementById('hljs-light').disabled = dark;
+      document.getElementById('hljs-dark').disabled  = !dark;
+    }
+    updateHljsTheme();
 
-    window.openShareModal = async function(articleId) {
-      currentArticleId = articleId;
+    const slug = decodeURIComponent(location.pathname.split('/wiki/')[1]?.replace(/\/$/, '') || '');
+    const params = new URLSearchParams(location.search);
+    const slugParam = params.get('slug') || slug;
+
+    // ===== 目次生成 =====
+    function buildToc(html) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html;
+      const headings = tmp.querySelectorAll('h2, h3');
+      if (headings.length < 2) return '';
+      const items = Array.from(headings).map((h, i) => {
+        const id = `heading-${i}`;
+        h.id = id;
+        const level = h.tagName.toLowerCase();
+        return `<li class="toc-item ${level}"><a href="#${id}">${h.textContent}</a></li>`;
+      }).join('');
+      // IDをhtmlに反映
+      Array.from(headings).forEach((h, i) => {
+        const el = document.getElementById('article-body')?.querySelectorAll('h2,h3')[i];
+        if (el) el.id = `heading-${i}`;
+      });
+      return `<nav class="toc-sticky"><div class="toc-title">目次</div><ul class="toc-list">${items}</ul></nav>`;
+    }
+
+    // 目次のアクティブ追跡
+    function initTocObserver() {
+      const headings = document.querySelectorAll('.article-body h2, .article-body h3');
+      if (!headings.length) return;
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          const id = entry.target.id;
+          const tocLink = document.querySelector(`.toc-item a[href="#${id}"]`);
+          if (tocLink) tocLink.closest('.toc-item').classList.toggle('active', entry.isIntersecting);
+        });
+      }, { rootMargin: '-10% 0px -80% 0px' });
+      headings.forEach(h => observer.observe(h));
+    }
+
+    // ===== 共有モーダル =====
+    let currentEditors = [], currentDocId = '', allUsersCache = {};
+    window.openShareModal = async function(docId) {
+      currentDocId = docId;
       document.getElementById('share-modal').classList.add('open');
       const list = document.getElementById('share-list');
       list.innerHTML = '<div style="color:var(--text-muted);font-size:13px">読み込み中...</div>';
       try {
         const [usersSnap, artSnap] = await Promise.all([
           get(ref(rtdb, 'users')),
-          getDoc(doc(db, 'articles', articleId))
+          getDoc(doc(db, 'articles', docId))
         ]);
         if (usersSnap.exists()) allUsersCache = usersSnap.val();
         currentEditors = artSnap.data()?.editors || [];
@@ -222,100 +237,138 @@
 
     function renderShareList() {
       const list = document.getElementById('share-list');
-      const rows = Object.entries(allUsersCache)
-        .filter(([uid, u]) => u.role !== 'banned' && !u.noShare);
-      list.innerHTML = rows.map(([uid, u]) => {
-        const isEditor = currentEditors.includes(uid);
-        const isAdmin  = ['owner','admin'].includes(u.role);
-        const initial  = (u.displayName || '?').charAt(0).toUpperCase();
-        let action = '';
-        if (isAdmin) {
-          action = '<span style="font-size:11px;color:var(--text-muted);padding:4px 8px">常時編集可</span>';
-        } else if (isEditor) {
-          action = `<button class="share-btn-remove" onclick="toggleEditor('${uid}', false)">削除</button>`;
-        } else {
-          action = `<button class="share-btn-add" onclick="toggleEditor('${uid}', true)">追加</button>`;
-        }
-        return `<div class="share-user-row">
-          <div class="share-user-info">
-            <div class="share-avatar">${initial}</div>
-            <div>
-              <div style="font-size:14px;font-weight:500">${u.displayName || '-'}</div>
-              <div style="font-size:11px;color:var(--text-muted)">${u.role}</div>
-            </div>
-          </div>
-          ${action}
-        </div>`;
-      }).join('');
+      list.innerHTML = Object.entries(allUsersCache)
+        .filter(([, u]) => u.role !== 'banned' && !u.noShare)
+        .map(([uid, u]) => {
+          const isEditor = currentEditors.includes(uid);
+          const isAdmin  = ['owner','admin'].includes(u.role);
+          const initial  = (u.displayName || '?').charAt(0).toUpperCase();
+          let action = isAdmin
+            ? '<span style="font-size:11px;color:var(--text-muted);padding:4px 8px">常時編集可</span>'
+            : isEditor
+              ? `<button class="share-btn-remove" onclick="toggleEditor('${uid}',false)">削除</button>`
+              : `<button class="share-btn-add" onclick="toggleEditor('${uid}',true)">追加</button>`;
+          return `<div class="share-user-row">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="share-avatar">${initial}</div>
+              <div><div style="font-size:14px;font-weight:500">${u.displayName||'-'}</div><div style="font-size:11px;color:var(--text-muted)">${u.role}</div></div>
+            </div>${action}</div>`;
+        }).join('');
     }
-
     window.toggleEditor = async function(uid, add) {
       if (add) { if (!currentEditors.includes(uid)) currentEditors.push(uid); }
       else { currentEditors = currentEditors.filter(e => e !== uid); }
-      await updateDoc(doc(db, 'articles', currentArticleId), { editors: currentEditors });
+      await updateDoc(doc(db, 'articles', currentDocId), { editors: currentEditors });
       renderShareList();
     };
 
-    window.doLogout = logout;
-    const slug = decodeURIComponent(new URLSearchParams(location.search).get('slug') || '');
-
+    // ===== メイン =====
     requireAuth(async (user, userData) => {
-      if (!slug) { window.location.href = '/wiki/'; return; }
+      if (!slugParam) { window.location.href = '/wiki/'; return; }
       try {
-        const snap = await getDocs(query(collection(db, 'articles'), where('slug', '==', slug)));
+        const snap = await getDocs(query(collection(db, 'articles'), where('slug', '==', slugParam)));
         if (snap.empty) {
-          document.getElementById('main').innerHTML = `<div class="not-found"><h2>記事が見つかりません</h2><p>「${slug}」は存在しません。</p><br><a href="/wiki/" style="color:var(--accent)">← 記事一覧へ</a></div>`;
+          document.getElementById('page-layout').innerHTML = `
+            <div class="not-found" style="width:100%">
+              <h2 style="margin-bottom:8px;color:var(--text)">記事が見つかりません</h2>
+              <p>「${slugParam}」は存在しません。</p><br>
+              <a href="/wiki/" style="color:var(--accent)">← 記事一覧へ</a>
+            </div>`;
           return;
         }
         const docSnap = snap.docs[0];
         const d = docSnap.data();
-        const date = d.updatedAt ? new Date(d.updatedAt.toMillis()).toLocaleDateString('ja-JP') : '';
+
+        // 非公開チェック（JSでも念のため）
+        const isPrivate = 'isPublic' in d && !d.isPublic;
+        if (isPrivate) {
+          const canView = d.createdBy === user.uid ||
+                          (d.editors || []).includes(user.uid) ||
+                          ['admin','owner'].includes(userData.role);
+          if (!canView) {
+            document.getElementById('page-layout').innerHTML = `
+              <div class="not-found" style="width:100%">
+                <h2 style="margin-bottom:8px;color:var(--text)">アクセスできません</h2>
+                <p>この記事は非公開です。</p><br>
+                <a href="/wiki/" style="color:var(--accent)">← 記事一覧へ</a>
+              </div>`;
+            return;
+          }
+        }
+
+        const date     = d.updatedAt ? new Date(d.updatedAt.toMillis()).toLocaleDateString('ja-JP') : '';
         const tagsHtml = (d.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
-        const canEdit   = ['owner','admin','editor'].includes(userData.role);
+        const canEdit   = ['owner','admin','editor'].includes(userData.role) ||
+                          d.createdBy === user.uid || (d.editors||[]).includes(user.uid);
         const canDelete = ['owner','admin'].includes(userData.role) || d.createdBy === user.uid;
+        const privateBadge = isPrivate ? '<span class="private-badge">非公開</span>' : '';
+
         document.title = `${d.title} — Dasopedia`;
-        const isPrivate = !d.isPublic;
-        document.getElementById('main').innerHTML = `
-          <div class="breadcrumb"><a href="/">Dasopedia</a> › <a href="/wiki/">記事一覧</a> › ${d.title}</div>
-          <div class="article-header">
-            <h1>${d.title}${isPrivate ? '<span class="private-badge">非公開</span>' : ''}</h1>
-            <div class="meta">${d.createdByName || '不明'} · ${date}</div>
-            ${tagsHtml ? `<div class="tags">${tagsHtml}</div>` : ''}
-            <div class="article-actions">
-              ${canEdit   ? `<a class="btn-edit" href="/edit/?id=${docSnap.id}">編集</a>` : ''}
-              ${canEdit   ? `<button class="btn-edit" onclick="openShareModal('${docSnap.id}')">👥 共有</button>` : ''}
-              ${canDelete ? `<button class="btn-delete" id="deleteBtn" onclick="doDelete('${docSnap.id}')" style="display:block">削除</button>` : ''}
+
+        // Markdown変換 + カスタム記法
+        let html = marked.parse(d.content || '');
+        html = applyCustomMarkdown(html);
+
+        // 目次生成用に一時DOMを作る
+        const tmpDiv = document.createElement('div');
+        tmpDiv.innerHTML = html;
+        const headings = tmpDiv.querySelectorAll('h2, h3');
+        let tocHtml = '';
+        if (headings.length >= 2) {
+          const items = Array.from(headings).map((h, i) => {
+            h.id = `heading-${i}`;
+            return `<li class="toc-item ${h.tagName.toLowerCase()}"><a href="#heading-${i}">${h.textContent}</a></li>`;
+          }).join('');
+          tocHtml = `<div class="toc-sidebar"><nav class="toc-sticky"><div class="toc-title">目次</div><ul class="toc-list">${items}</ul></nav></div>`;
+          html = tmpDiv.innerHTML;
+        }
+
+        document.getElementById('page-layout').innerHTML = `
+          ${tocHtml}
+          <div class="article-main">
+            <div class="breadcrumb"><a href="/">Dasopedia</a> › <a href="/wiki/">記事一覧</a> › ${d.title}</div>
+            <div class="article-header">
+              <h1>${d.title}${privateBadge}</h1>
+              <div class="article-meta">${d.createdByName || '不明'} · ${date}</div>
+              ${tagsHtml ? `<div class="tags">${tagsHtml}</div>` : ''}
+              <div class="article-actions">
+                ${canEdit   ? `<a class="btn-edit" href="/edit/?id=${docSnap.id}">編集</a>` : ''}
+                ${canEdit   ? `<button class="btn-edit" onclick="openShareModal('${docSnap.id}')">👥 共有</button>` : ''}
+                ${canDelete ? `<button class="btn-delete" id="deleteBtn" onclick="doDelete('${docSnap.id}')" style="display:block">削除</button>` : ''}
+              </div>
             </div>
-          </div>
-          <div class="article-body" id="article-body"></div>`;
-        document.getElementById('article-body').innerHTML = marked.parse(d.content || '');
-        window.doDelete = async id => {
+            <div class="article-body" id="article-body">${html}</div>
+          </div>`;
+
+        // シンタックスハイライト
+        document.querySelectorAll('.article-body pre code').forEach(el => hljs.highlightElement(el));
+
+        // 目次のアクティブ追跡
+        initTocObserver();
+
+        window.doDelete = async function(id) {
           if (!confirm('この記事を削除しますか？')) return;
           await deleteDoc(doc(db, 'articles', id));
           window.location.href = '/wiki/';
         };
-      } catch (e) {
-        document.getElementById('main').innerHTML = '<div class="not-found"><h2>読み込みエラー</h2></div>';
+
+      } catch(e) {
+        console.error(e);
+        document.getElementById('page-layout').innerHTML = '<div class="not-found" style="width:100%"><h2>読み込みエラー</h2></div>';
       }
     });
+
+    function initTocObserver() {
+      const headings = document.querySelectorAll('.article-body h2, .article-body h3');
+      if (!headings.length) return;
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          const tocLink = document.querySelector(`.toc-item a[href="#${entry.target.id}"]`);
+          if (tocLink) tocLink.closest('.toc-item').classList.toggle('active', entry.isIntersecting);
+        });
+      }, { rootMargin: '-10% 0px -80% 0px' });
+      headings.forEach(h => observer.observe(h));
+    }
   </script>
-
-  <footer style="border-top:1px solid var(--border);margin-top:auto;padding:24px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-    <span style="font-size:12px;color:var(--text-muted)">© Dasopedia</span>
-    <div style="display:flex;gap:16px">
-      <a href="/legal/" style="font-size:12px;color:var(--text-muted);text-decoration:none" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'">利用規約</a>
-      <a href="/legal/privacy/" style="font-size:12px;color:var(--text-muted);text-decoration:none" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'">プライバシーポリシー</a>
-    </div>
-  </footer>
-
-  <div class="share-modal-overlay" id="share-modal" onclick="if(event.target===this)closeShareModal()">
-    <div class="share-modal">
-      <div style="font-size:16px;font-weight:700;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center">
-        編集者を管理
-        <button onclick="closeShareModal()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:20px">✕</button>
-      </div>
-      <div id="share-list"><div style="color:var(--text-muted);font-size:13px">読み込み中...</div></div>
-    </div>
-  </div>
 </body>
 </html>

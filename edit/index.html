@@ -112,42 +112,16 @@
       .doc-nav ol { gap: 4px; }
     }
 
-    /* ハンバーガーメニュー */
+    /* editページのナビ：ハンバーガーなし・常に横並び */
     #hamburger { display: none; }
+    #nav-menu { display: flex; align-items: center; gap: 8px; }
     @media (max-width: 640px) {
-      #hamburger { display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--border); border-radius: 7px; color: var(--text); cursor: pointer; font-size: 18px; padding: 5px 10px; margin-left: auto; }
-      #nav-menu {
-        display: none; flex-direction: column; align-items: flex-start;
-        position: absolute; top: 56px; left: 0; right: 0;
-        background: var(--surface); border-bottom: 1px solid var(--border);
-        padding: 4px 0; z-index: 300; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      }
-      #nav-menu.open { display: flex; }
-      #nav-menu > .nav-link,
-      #nav-menu > .btn-sm,
-      #nav-menu > .tb,
-      #nav-menu > button:not(#hamburger) {
-        width: 100% !important; padding: 12px 20px !important;
-        border-radius: 0 !important; border-left: none !important;
-        border-right: none !important; border-top: none !important;
-        border-bottom: 1px solid var(--border) !important;
-        font-size: 14px !important; text-align: left; box-sizing: border-box;
-      }
-      #nav-menu > .nav-link:last-child,
-      #nav-menu > button:last-child { border-bottom: none !important; }
-      #nav-menu > .avatar-wrap {
-        padding: 8px 16px !important;
-        border-bottom: 1px solid var(--border) !important;
-        position: relative !important;
-      }
-      #nav-menu > .avatar-wrap .avatar-dropdown {
-        position: absolute !important;
-        top: calc(100% + 4px) !important;
-        right: 16px !important;
-        left: auto !important;
-      }
-      #nav-menu .btn-sm { background: none !important; color: var(--accent) !important; }
-      #nav-menu .avatar-wrap { padding: 8px 20px !important; }
+      nav { padding: 0 12px; gap: 6px; }
+      .nav-center { display: none; }
+      .btn-cancel { font-size: 12px; padding: 6px 10px; }
+      .btn-save { font-size: 12px; padding: 6px 12px; }
+      .visibility-toggle { font-size: 12px; padding: 6px 10px; }
+      #theme-toggle { display: none; }
     }
 
     /* 画像アップロードモーダル */

@@ -181,6 +181,7 @@
     </div>
     <button class="btn-nav" id="share-btn" onclick="openShareModal()" style="display:none">👥 共有</button>
     <button class="btn-icon" id="theme-toggle" onclick="window.themeToggle()">🌙</button>
+    <div id="autosave-indicator" style="font-size:12px;color:var(--text-muted);white-space:nowrap;display:none"></div>
     <button class="btn-save" id="saveBtn" onclick="doSave()">保存</button>
   </nav>
 
@@ -635,6 +636,69 @@
       ta.value = ta.value.slice(0, fresh.start) + newTag + ta.value.slice(fresh.end);
       updatePreview(); closeResizeModal();
     };
+
+
+    // ===== 自動保存 =====
+    const AUTOSAVE_KEY    = 'dasopedia-autosave';
+    const AUTOSAVE_INT_KEY = 'dasopedia-autosave-interval';
+    let autosaveTimer   = null;
+    let lastSavedContent = '';
+
+    function getAutosaveEnabled()  { return localStorage.getItem(AUTOSAVE_KEY) !== 'false'; }
+    function getAutosaveInterval() { return parseInt(localStorage.getItem(AUTOSAVE_INT_KEY) || '60') * 1000; }
+
+    function showAutosaveStatus(msg, color = 'var(--text-muted)') {
+      const el = document.getElementById('autosave-indicator');
+      el.textContent = msg;
+      el.style.color = color;
+      el.style.display = 'block';
+    }
+
+    function scheduleAutosave() {
+      if (autosaveTimer) clearTimeout(autosaveTimer);
+      if (!getAutosaveEnabled()) return;
+      autosaveTimer = setTimeout(async () => {
+        const content = document.getElementById('editor').value;
+        if (!content.trim()) return;
+        if (content === lastSavedContent) { showAutosaveStatus('変更なし'); return; }
+        showAutosaveStatus('自動保存中...');
+        try {
+          await doSaveQuiet();
+          lastSavedContent = content;
+          showAutosaveStatus('自動保存済み ✓', 'var(--success, #2a9d6f)');
+          setTimeout(() => { document.getElementById('autosave-indicator').style.display = 'none'; }, 3000);
+        } catch(e) {
+          showAutosaveStatus('自動保存失敗', 'var(--error)');
+        }
+      }, getAutosaveInterval());
+    }
+
+    // エディタ変更時に自動保存をスケジュール
+    const origUpdatePreview = window.updatePreview;
+    window.updatePreview = function() {
+      origUpdatePreview();
+      scheduleAutosave();
+    };
+
+    async function doSaveQuiet() {
+      const title   = document.getElementById('title-input').value.trim();
+      const slug    = document.getElementById('slug-input').value.trim();
+      const content = document.getElementById('editor').value;
+      const tags    = document.getElementById('tags-input').value.split(',').map(t => t.trim()).filter(Boolean);
+      if (!title || !slug || !content.trim()) return;
+      const contentText = content.replace(/[#*`_~\[\]()>!{}]/g, '').replace(/\s+/g, ' ').trim();
+      if (articleId) {
+        await updateDoc(doc(db, 'articles', articleId), { title, slug, content, contentText, tags, isPublic, editors, updatedAt: serverTimestamp() });
+      }
+      // 新規記事は自動保存しない（slugが重複する可能性があるため）
+    }
+
+    // 初期化時に自動保存インジケーター表示
+    if (getAutosaveEnabled()) {
+      const intSec = getAutosaveInterval() / 1000;
+      showAutosaveStatus(`自動保存: ${intSec}秒ごと`);
+      setTimeout(() => { document.getElementById('autosave-indicator').style.display = 'none'; }, 2000);
+    }
 
     // ===== 保存 =====
     window.doSave = async function() {

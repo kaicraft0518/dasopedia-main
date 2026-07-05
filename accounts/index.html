@@ -63,6 +63,13 @@
     .badge-unlinked { background: var(--bg); border: 1px solid var(--border); border-radius: 5px; color: var(--text-muted); font-size: 11px; font-weight: 700; padding: 3px 8px; }
 
     .danger-zone { border-color: rgba(214,59,59,0.3); }
+    .interval-btn {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 7px;
+      color: var(--text-muted); cursor: pointer; font-family: var(--font);
+      font-size: 13px; padding: 7px 16px; transition: all 0.15s;
+    }
+    .interval-btn:hover { border-color: var(--accent); color: var(--text); }
+    .interval-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
     .btn-logout { background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--text-muted); cursor: pointer; font-family: var(--font); font-size: 14px; padding: 11px; width: 100%; transition: border-color 0.15s, color 0.15s; }
     .btn-logout:hover { border-color: var(--error); color: var(--error); }
 
@@ -222,6 +229,39 @@
       </div>
     </div>
 
+    <!-- 自動保存設定 -->
+    <div class="card">
+      <div class="card-title">エディタ設定</div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+
+        <!-- 自動保存 ON/OFF -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)">
+          <div>
+            <div style="font-size:14px;font-weight:600;margin-bottom:2px">自動保存</div>
+            <div style="font-size:12px;color:var(--text-muted)">記事編集中に自動でFirestoreに保存します（新規作成時は無効）</div>
+          </div>
+          <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;cursor:pointer">
+            <input type="checkbox" id="autosave-toggle" onchange="saveAutosaveSettings()" style="opacity:0;width:0;height:0;position:absolute">
+            <span id="autosave-slider" style="position:absolute;inset:0;border-radius:24px;transition:0.2s;background:var(--border)"></span>
+            <span id="autosave-knob" style="position:absolute;width:18px;height:18px;left:3px;top:3px;border-radius:50%;background:#fff;transition:0.2s"></span>
+          </label>
+        </div>
+
+        <!-- 自動保存間隔 -->
+        <div id="autosave-interval-section">
+          <div style="font-size:13px;font-weight:600;margin-bottom:10px">保存間隔</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap" id="interval-buttons">
+            <button class="interval-btn" data-sec="30" onclick="setInterval(30)">30秒</button>
+            <button class="interval-btn" data-sec="60" onclick="setInterval(60)">1分</button>
+            <button class="interval-btn" data-sec="120" onclick="setInterval(120)">2分</button>
+            <button class="interval-btn" data-sec="300" onclick="setInterval(300)">5分</button>
+          </div>
+        </div>
+
+        <div id="autosave-msg" class="msg"></div>
+      </div>
+    </div>
+
     <!-- ログアウト -->
     <div class="card danger-zone">
       <div class="card-title">その他</div>
@@ -326,6 +366,61 @@
         showMsg('link-msg', `解除エラー: ${e.message}`, 'error');
       }
     };
+
+    // ===== 自動保存設定 =====
+    const AUTOSAVE_KEY     = 'dasopedia-autosave';
+    const AUTOSAVE_INT_KEY = 'dasopedia-autosave-interval';
+
+    function loadAutosaveUI() {
+      const enabled  = localStorage.getItem(AUTOSAVE_KEY) !== 'false';
+      const interval = parseInt(localStorage.getItem(AUTOSAVE_INT_KEY) || '60');
+
+      const toggle = document.getElementById('autosave-toggle');
+      const slider = document.getElementById('autosave-slider');
+      const knob   = document.getElementById('autosave-knob');
+      const section = document.getElementById('autosave-interval-section');
+
+      toggle.checked = enabled;
+      slider.style.background = enabled ? 'var(--accent)' : 'var(--border)';
+      knob.style.transform = enabled ? 'translateX(20px)' : 'translateX(0)';
+      section.style.opacity = enabled ? '1' : '0.4';
+      section.style.pointerEvents = enabled ? 'auto' : 'none';
+
+      document.querySelectorAll('.interval-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.sec) === interval);
+      });
+    }
+
+    window.saveAutosaveSettings = function() {
+      const enabled = document.getElementById('autosave-toggle').checked;
+      localStorage.setItem(AUTOSAVE_KEY, enabled ? 'true' : 'false');
+
+      const slider  = document.getElementById('autosave-slider');
+      const knob    = document.getElementById('autosave-knob');
+      const section = document.getElementById('autosave-interval-section');
+      slider.style.background = enabled ? 'var(--accent)' : 'var(--border)';
+      knob.style.transform = enabled ? 'translateX(20px)' : 'translateX(0)';
+      section.style.opacity = enabled ? '1' : '0.4';
+      section.style.pointerEvents = enabled ? 'auto' : 'none';
+
+      const msg = document.getElementById('autosave-msg');
+      msg.textContent = enabled ? '自動保存を有効にしました。' : '自動保存を無効にしました。';
+      msg.className = 'msg success';
+      setTimeout(() => msg.className = 'msg', 2000);
+    };
+
+    window.setInterval = function(sec) {
+      localStorage.setItem(AUTOSAVE_INT_KEY, sec.toString());
+      document.querySelectorAll('.interval-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.sec) === sec);
+      });
+      const msg = document.getElementById('autosave-msg');
+      msg.textContent = `保存間隔を${sec >= 60 ? (sec/60)+'分' : sec+'秒'}に設定しました。`;
+      msg.className = 'msg success';
+      setTimeout(() => msg.className = 'msg', 2000);
+    };
+
+    loadAutosaveUI();
 
     const AGREE_VERSION = '1.0';
 

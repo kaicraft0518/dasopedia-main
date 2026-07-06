@@ -180,28 +180,48 @@
     requireAuth(async (user, userData) => {
       const name = userData.displayName || user.displayName || 'メンバー';
       document.getElementById('welcome-msg').textContent = `ようこそ、${name} さん`;
-      document.getElementById('avatar').textContent = name.charAt(0).toUpperCase();
+      // Google連携の場合はphotoURLを使用
+      const photoURL = user.photoURL;
+      const avatarEl = document.getElementById('avatar');
+      if (photoURL) {
+        avatarEl.innerHTML = `<img src="${photoURL}" referrerpolicy="no-referrer" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+      } else {
+        avatarEl.textContent = name.charAt(0).toUpperCase();
+      }
       document.getElementById('dropdown-name').textContent = name;
       document.getElementById('dropdown-role').textContent = userData.role || 'viewer';
+      document.getElementById('mob-username').textContent = `${name} (${userData.role || 'viewer'})`;
+
       if (['owner','admin'].includes(userData.role)) {
         document.getElementById('admin-link').style.display = 'block';
+        document.getElementById('mob-admin-link').style.display = 'block';
       }
+
+      function canSee(d) {
+        if (!('isPublic' in d)) return true;
+        if (d.isPublic) return true;
+        if (d.createdBy === user.uid) return true;
+        if ((d.editors || []).includes(user.uid)) return true;
+        if (['admin','owner'].includes(userData.role)) return true;
+        return false;
+      }
+
       try {
-        const q = query(collection(db, 'articles'), orderBy('updatedAt', 'desc'), limit(10));
+        const q = query(collection(db, 'articles'), orderBy('updatedAt', 'desc'), limit(20));
         const snap = await getDocs(q);
         const list = document.getElementById('article-list');
-        if (snap.empty) {
-          list.innerHTML = '<div class="empty">まだ記事がありません。最初の記事を書いてみましょう！</div>';
-          return;
-        }
+        const visible = snap.docs.filter(d => canSee(d.data())).slice(0, 10);
+        if (!visible.length) { list.innerHTML = '<div class="empty">まだ記事がありません。最初の記事を書いてみましょう！</div>'; return; }
         list.innerHTML = '';
-        snap.forEach(doc => {
-          const d = doc.data();
+        visible.forEach(docSnap => {
+          const d = docSnap.data();
           const date = d.updatedAt ? new Date(d.updatedAt.toMillis()).toLocaleDateString('ja-JP') : '';
           const tagsHtml = (d.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
-          list.innerHTML += `<a class="article-card" href="/wiki/article/?slug=${encodeURIComponent(d.slug || doc.id)}">
+          const privateBadge = ('isPublic' in d) && !d.isPublic
+            ? '<span style="background:rgba(239,180,108,0.12);border:1px solid rgba(239,180,108,0.3);border-radius:4px;color:#b07d00;font-size:10px;font-weight:700;padding:2px 6px;margin-left:6px">非公開</span>' : '';
+          list.innerHTML += `<a class="article-card" href="/wiki/article/?slug=${encodeURIComponent(d.slug || docSnap.id)}">
             <div>
-              <div class="article-title">${d.title}</div>
+              <div class="article-title">${d.title}${privateBadge}</div>
               <div class="article-meta">${d.createdByName || '不明'} · ${date}</div>
               ${tagsHtml ? `<div class="tags">${tagsHtml}</div>` : ''}
             </div>
@@ -209,7 +229,6 @@
           </a>`;
         });
       } catch (e) {
-        console.error(e);
         document.getElementById('article-list').innerHTML = '<div class="empty">記事の読み込みに失敗しました。</div>';
       }
     });

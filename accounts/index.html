@@ -344,11 +344,13 @@
     window.linkProvider = async function(providerId) {
       try {
         if (providerId === 'google.com') {
-          await linkWithPopup(currentUser, new GoogleAuthProvider());
+          const cred = await linkWithPopup(currentUser, new GoogleAuthProvider());
+          // userをリロードして最新のphotoURLを取得
+          await cred.user.reload();
+          currentUser = auth.currentUser;
           showMsg('link-msg', 'Googleアカウントを連携しました！', 'success');
           renderProviders(currentUser);
           renderAvatar(currentUser);
-          document.getElementById('avatar-source').textContent = 'Googleアカウントの画像を使用中';
         }
       } catch (e) {
         if (e.code !== 'auth/popup-closed-by-user') showMsg('link-msg', `連携エラー: ${e.message}`, 'error');
@@ -483,6 +485,8 @@
     };
 
     requireAuth(async (user, userData) => {
+      // 最新の状態を取得
+      await user.reload();
       currentUser = auth.currentUser;
       renderAvatar(currentUser);
       renderProviders(currentUser);

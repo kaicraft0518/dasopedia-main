@@ -164,7 +164,7 @@
   <script type="module">
     import { toggleTheme, updateToggleButton } from 'https://dasopedia.f5.si/js/theme.js';
     import { requireAuth, logout } from 'https://dasopedia.f5.si/js/auth.js';
-    import { db } from 'https://dasopedia.f5.si/js/firebase.js';
+    import { db, auth } from 'https://dasopedia.f5.si/js/firebase.js';
     import { collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     window.themeToggle = toggleTheme;
@@ -178,6 +178,9 @@
     };
 
     requireAuth(async (user, userData) => {
+      // 最新のphotoURLなどを取得
+      await user.reload();
+      user = auth.currentUser;
       const name = userData.displayName || user.displayName || 'メンバー';
       document.getElementById('welcome-msg').textContent = `ようこそ、${name} さん`;
       // Google連携の場合はphotoURLを使用

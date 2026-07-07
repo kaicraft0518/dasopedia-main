@@ -5,7 +5,7 @@ import { getDatabase } from "https://www.gstatic.com/firebasejs/10.12.0/firebase
 
 const firebaseConfig = {
   apiKey: "AIzaSyA_51OiIxVU-e6_8MVCXIauXMEdB_58sNE",
-  authDomain: "wiki-dasopedia.firebaseapp.com",
+  authDomain: "auth.dasopedia.f5.si",
   projectId: "wiki-dasopedia",
   storageBucket: "wiki-dasopedia.firebasestorage.app",
   messagingSenderId: "446627888444",

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>お知らせ — Dasopedia</title>
+  <script>(function(){ document.documentElement.setAttribute('data-theme', localStorage.getItem('dasopedia-theme') || 'light'); })();</script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    [data-theme="light"] { --bg: #f5f6fa; --surface: #ffffff; --border: #e2e4ed; --accent: #4f6de0; --text: #1a1d2e; --text-muted: #6b7080; --error: #d63b3b; --font: 'Inter', 'Hiragino Sans', sans-serif; --font-mono: monospace; }
+    [data-theme="dark"]  { --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3e; --accent: #6c8bef; --text: #e8eaf0; --text-muted: #7b7f96; --error: #ef6c6c; --font: 'Inter', 'Hiragino Sans', sans-serif; --font-mono: monospace; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; display: flex; flex-direction: column; }
+    nav { background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 56px; position: sticky; top: 0; z-index: 100; }
+    .nav-logo { font-size: 16px; font-weight: 700; color: var(--text); text-decoration: none; }
+    .nav-logo span { color: var(--accent); }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .nav-link { color: var(--text-muted); font-size: 13px; text-decoration: none; }
+    .nav-link:hover { color: var(--text); }
+    .btn-icon { background: none; border: 1px solid var(--border); border-radius: 7px; color: var(--text); cursor: pointer; font-size: 15px; padding: 5px 10px; }
+    .main { max-width: 760px; width: 100%; margin: 0 auto; padding: 40px 24px; flex: 1; }
+    .breadcrumb { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; }
+    .breadcrumb a { color: var(--accent); text-decoration: none; }
+    .notice-header { margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .notice-header h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 10px; }
+    .notice-meta { font-size: 13px; color: var(--text-muted); }
+    .notice-actions { display: flex; gap: 8px; margin-top: 14px; }
+    .btn-edit { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; color: var(--text-muted); font-family: var(--font); font-size: 13px; padding: 7px 14px; text-decoration: none; transition: border-color 0.15s; }
+    .btn-edit:hover { border-color: var(--accent); color: var(--text); }
+    .btn-delete { background: rgba(214,59,59,0.08); border: 1px solid rgba(214,59,59,0.25); border-radius: 7px; color: var(--error); cursor: pointer; font-family: var(--font); font-size: 13px; padding: 7px 14px; }
+    .notice-body { line-height: 1.85; font-size: 15px; }
+    .notice-body h2 { font-size: 20px; font-weight: 700; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin: 24px 0 12px; }
+    .notice-body h3 { font-size: 17px; font-weight: 700; margin: 20px 0 10px; }
+    .notice-body p { margin-bottom: 14px; }
+    .notice-body ul, .notice-body ol { margin: 0 0 14px 22px; }
+    .notice-body code { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-mono); font-size: 13px; padding: 2px 5px; }
+    .notice-body pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin: 14px 0; overflow-x: auto; }
+    .notice-body a { color: var(--accent); }
+    .not-found { text-align: center; padding: 80px 24px; color: var(--text-muted); }
+    @media (max-width: 680px) { nav { padding: 0 16px; } .main { padding: 24px 16px; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="nav-logo" href="/"><span>D</span>asopedia</a>
+    <div class="nav-right">
+      <a class="nav-link" href="/notices/">← お知らせ一覧</a>
+      <button class="btn-icon" id="theme-toggle" onclick="window.themeToggle()">🌙</button>
+      <a class="nav-link" href="#" onclick="doLogout()">ログアウト</a>
+    </div>
+  </nav>
+
+  <div class="main" id="main">
+    <div style="color:var(--text-muted);text-align:center;padding:80px">読み込み中...</div>
+  </div>
+
+  <footer style="border-top:1px solid var(--border);padding:24px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <span style="font-size:12px;color:var(--text-muted)">© Dasopedia</span>
+    <div style="display:flex;gap:16px">
+      <a href="/legal/" style="font-size:12px;color:var(--text-muted);text-decoration:none">利用規約</a>
+      <a href="/legal/privacy/" style="font-size:12px;color:var(--text-muted);text-decoration:none">プライバシーポリシー</a>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { toggleTheme, updateToggleButton } from 'https://dasopedia.f5.si/js/theme.js';
+    import { requireAuth, logout } from 'https://dasopedia.f5.si/js/auth.js';
+    import { db, rtdb } from 'https://dasopedia.f5.si/js/firebase.js';
+    import { doc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { applyCustomMarkdown } from 'https://dasopedia.f5.si/js/custom-markdown.js';
+
+    window.themeToggle = toggleTheme;
+    window.doLogout = logout;
+    updateToggleButton();
+
+    const params = new URLSearchParams(location.search);
+    const noticeId = params.get('id');
+
+    const READ_KEY = 'dasopedia-read-notices';
+    function markAsRead(id) {
+      const ids = JSON.parse(localStorage.getItem(READ_KEY) || '[]');
+      if (!ids.includes(id)) { ids.push(id); localStorage.setItem(READ_KEY, JSON.stringify(ids)); }
+    }
+
+    requireAuth(async (user, userData) => {
+      if (!noticeId) { window.location.href = '/notices/'; return; }
+
+      // 投稿権限チェック
+      let canWrite = false;
+      try {
+        const cfgSnap = await get(ref(rtdb, 'config/noticeRole'));
+        const noticeRole = cfgSnap.exists() ? cfgSnap.val() : 'admin';
+        const roleOrder  = ['viewer','editor','admin','owner'];
+        canWrite = roleOrder.indexOf(userData.role) >= roleOrder.indexOf(noticeRole);
+      } catch(e) {}
+
+      try {
+        const snap = await getDoc(doc(db, 'notices', noticeId));
+        if (!snap.exists()) {
+          document.getElementById('main').innerHTML = '<div class="not-found"><h2>お知らせが見つかりません</h2><br><a href="/notices/" style="color:var(--accent)">← 一覧へ</a></div>';
+          return;
+        }
+        const d = snap.data();
+        document.title = `${d.title} — Dasopedia`;
+        markAsRead(noticeId);
+
+        const date = d.createdAt ? new Date(d.createdAt.toMillis()).toLocaleDateString('ja-JP') : '';
+        let html = marked.parse(d.content || '');
+        html = applyCustomMarkdown(html);
+
+        document.getElementById('main').innerHTML = `
+          <div class="breadcrumb"><a href="/">Dasopedia</a> › <a href="/notices/">お知らせ</a> › ${d.title}</div>
+          <div class="notice-header">
+            <h1>${d.title}</h1>
+            <div class="notice-meta">${d.createdByName || '運営'} · ${date}</div>
+            ${canWrite ? `<div class="notice-actions">
+              <a class="btn-edit" href="/notices/edit/?id=${noticeId}">編集</a>
+              <button class="btn-delete" onclick="doDelete()">削除</button>
+            </div>` : ''}
+          </div>
+          <div class="notice-body" id="notice-body">${html}</div>`;
+
+        window.doDelete = async function() {
+          if (!confirm('このお知らせを削除しますか？')) return;
+          await deleteDoc(doc(db, 'notices', noticeId));
+          window.location.href = '/notices/';
+        };
+      } catch(e) {
+        document.getElementById('main').innerHTML = '<div class="not-found"><h2>読み込みエラー</h2></div>';
+      }
+    });
+  </script>
+</body>
+</html>

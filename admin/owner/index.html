@@ -167,6 +167,22 @@
     </div>
   </div>
 
+  <!-- お知らせ投稿権限 -->
+  <div class="card" style="margin-top:20px">
+    <div class="card-title">📢 お知らせ投稿権限</div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">どのロール以上がお知らせを投稿・編集できるか設定します。</p>
+    <div class="field">
+      <label>投稿できる最低ロール</label>
+      <select id="notice-role-select" class="modal-select" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:14px;padding:10px 12px;outline:none;width:100%">
+        <option value="editor">editor（編集者以上）</option>
+        <option value="admin">admin（管理者以上）</option>
+        <option value="owner">owner（ownerのみ）</option>
+      </select>
+    </div>
+    <button onclick="saveNoticeRole()" style="background:var(--accent);border:none;border-radius:8px;color:#fff;cursor:pointer;font-family:var(--font);font-size:14px;font-weight:600;padding:11px;width:100%;margin-top:4px">保存</button>
+    <div class="message" id="notice-role-msg"></div>
+  </div>
+
   <script type="module">
     import { toggleTheme, updateToggleButton } from 'https://dasopedia.f5.si/js/theme.js';
     import { requireAdmin, logout } from 'https://dasopedia.f5.si/js/auth.js';
@@ -207,6 +223,28 @@
         sel.appendChild(opt);
       });
     });
+
+    // お知らせ権限設定の読み込み
+    async function loadNoticeRole() {
+      const snap = await get(ref(rtdb, 'config/noticeRole'));
+      const role = snap.exists() ? snap.val() : 'admin';
+      document.getElementById('notice-role-select').value = role;
+    }
+    loadNoticeRole().catch(() => {});
+
+    window.saveNoticeRole = async function() {
+      const role  = document.getElementById('notice-role-select').value;
+      const msgEl = document.getElementById('notice-role-msg');
+      try {
+        const { set: dbSet } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
+        await dbSet(ref(rtdb, 'config/noticeRole'), role);
+        msgEl.textContent = `お知らせ投稿権限を「${role}」以上に設定しました。`;
+        msgEl.className = 'message success';
+      } catch(e) {
+        msgEl.textContent = `エラー: ${e.message}`;
+        msgEl.className = 'message error';
+      }
+    };
 
     window.changeRole = async function() {
       const uid     = document.getElementById('target-user').value;

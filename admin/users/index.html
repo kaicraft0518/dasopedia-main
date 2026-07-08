@@ -200,6 +200,13 @@
         <div class="result-code" id="result-code"></div>
         <div class="result-meta" id="result-meta"></div>
         <button class="copy-btn" id="copy-btn" onclick="copyCode()">コードをコピー</button>
+        <div id="invite-url-section" style="display:none;margin-top:12px">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;font-weight:600">招待URL</div>
+          <div style="display:flex;gap:8px">
+            <input id="invite-url-display" readonly style="background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font-family:monospace;font-size:12px;padding:8px 10px;flex:1;outline:none">
+            <button onclick="copyUrl()" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);cursor:pointer;font-family:var(--font);font-size:12px;padding:8px 12px;white-space:nowrap;transition:border-color 0.15s" id="copy-url-btn">URLをコピー</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -392,6 +399,7 @@
       document.getElementById('invite-admin-opt').style.display = myRole === 'owner' ? 'block' : 'none';
       document.getElementById('result-box').style.display = 'none';
       document.getElementById('result-code').textContent = '';
+      document.getElementById('invite-url-section').style.display = 'none';
       document.getElementById('invite-modal').classList.add('open');
     };
     window.closeInviteModal = () => document.getElementById('invite-modal').classList.remove('open');
@@ -421,6 +429,14 @@
       navigator.clipboard.writeText(code).then(() => {
         document.getElementById('copy-btn').textContent = 'コピー済み！';
         setTimeout(() => document.getElementById('copy-btn').textContent = 'コードをコピー', 2000);
+      });
+    };
+
+    window.copyUrl = function() {
+      const url = document.getElementById('invite-url-display').value;
+      navigator.clipboard.writeText(url).then(() => {
+        document.getElementById('copy-url-btn').textContent = 'コピー済み！';
+        setTimeout(() => document.getElementById('copy-url-btn').textContent = 'URLをコピー', 2000);
       });
     };
 

@@ -152,38 +152,33 @@
     import { redirectIfLoggedIn, rtdb } from 'https://dasopedia.f5.si/js/auth.js';
     import { auth } from 'https://dasopedia.f5.si/js/firebase.js';
     import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { ref, set, get, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     redirectIfLoggedIn();
-
-    // URLパラメータからコード自動入力・registerモード切り替え
-    const urlParams = new URLSearchParams(location.search);
-    const urlCode   = urlParams.get('code');
-    const autoReg   = urlParams.get('register') === '1';
-
-    if (urlCode || autoReg) {
-      // 新規登録タブに切り替え
-      window.switchTab('register');
-      if (urlCode) {
-        document.getElementById('inviteCode').value = urlCode;
-      }
-    }
-
+    
     const msgEl = document.getElementById('msg');
-    const btn   = document.getElementById('submitBtn');
+    const btn = document.getElementById('submitBtn');
     let mode = 'login';
+    
+    // switchTabの定義を先に行う
+    // window.switchTab = function(tab) {
+    // mode = tab;
 
-    window.switchTab = function(tab) {
-      mode = tab;
-      document.querySelectorAll('.tab').forEach((t, i) => {
-        t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
-      });
-      document.getElementById('field-displayName').style.display = tab === 'register' ? 'flex' : 'none';
-      document.getElementById('field-inviteCode').style.display = tab === 'register' ? 'flex' : 'none';
-      document.getElementById('field-agree').style.display = tab === 'register' ? 'flex' : 'none';
-      btn.textContent = tab === 'login' ? 'ログイン' : 'アカウントを作成';
-      msgEl.className = 'message';
-    };
+    document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
+  });
+  document.getElementById('field-displayName').style.display = tab === 'register' ? 'flex' : 'none';
+  document.getElementById('field-inviteCode').style.display = tab === 'register' ? 'flex' : 'none';
+  document.getElementById('field-agree').style.display = tab === 'register' ? 'flex' : 'none';
+  btn.textContent = tab === 'login' ? 'ログイン' : '登録する';
+  msgEl.className = 'message';
+
+// URLパラメータの処理を後に行う（定義済みのswitchTabを呼び出す）
+const urlParams = new URLSearchParams(location.search);
+const urlCode = urlParams.get('code');
+const autoReg = urlParams.get('register') === '1';
+if (urlCode && autoReg) window.switchTab('register');
+if (urlCode) document.getElementById('inviteCode').value = urlCode;
 
     function showMsg(text) { msgEl.textContent = text; msgEl.className = 'message error'; }
 
@@ -208,7 +203,6 @@
         if (mode === 'login') {
           const cred = await signInWithEmailAndPassword(auth, email, password);
           await ensureUserRecord(cred.user);
-          await update(ref(rtdb, `users/${cred.user.uid}`), { lastLoginAt: Date.now() });
         } else {
           if (password.length < 8) { showMsg('パスワードは8文字以上にしてください。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
           // 同意チェック
@@ -253,7 +247,6 @@
         const provider = new GoogleAuthProvider();
         const cred = await signInWithPopup(auth, provider);
         await ensureUserRecord(cred.user);
-        await update(ref(rtdb, `users/${cred.user.uid}`), { lastLoginAt: Date.now() });
         window.location.href = '/';
       } catch (e) {
         if (e.code !== 'auth/popup-closed-by-user') showMsg(`Googleログインエラー: ${e.message}`);

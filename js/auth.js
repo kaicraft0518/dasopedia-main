@@ -1,6 +1,6 @@
 import { auth, rtdb } from 'https://dasopedia.f5.si/js/firebase.js';
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { ref, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { ref, get, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const LOGIN_URL   = '/login/';
 const MAIN_URL    = '/';
@@ -19,7 +19,10 @@ function waitForAuth() {
 async function getUserData(uid) {
   try {
     const snap = await get(ref(rtdb, `users/${uid}`));
-    return snap.exists() ? snap.val() : { role: 'viewer' };
+    const userData = snap.exists() ? snap.val() : { role: 'viewer' };
+    // 最終アクセス日時を更新（エラーでも続行）
+    update(ref(rtdb, `users/${uid}`), { lastAccess: Date.now() }).catch(() => {});
+    return userData;
   } catch (e) {
     console.error('[auth] RTDB error:', e.code, e.message);
     return { role: 'viewer' };

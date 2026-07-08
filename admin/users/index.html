@@ -151,7 +151,7 @@
     <!-- ユーザー一覧タブ -->
     <div class="tab-panel active" id="panel-users">
       <table>
-        <thead><tr><th>表示名</th><th>メールアドレス</th><th>ロール</th><th>登録日</th><th>操作</th></tr></thead>
+        <thead><tr><th>表示名</th><th>メールアドレス</th><th>ロール</th><th>登録日</th><th>最終ログイン</th><th>操作</th></tr></thead>
         <tbody id="user-tbody"><tr><td colspan="5" class="empty">読み込み中...</td></tr></tbody>
       </table>
     </div>
@@ -249,6 +249,32 @@
 
     // ===== ユーザー一覧 =====
     const ROLES = ['admin', 'editor', 'viewer', 'banned'];
+
+    function formatLastAccess(ts) {
+      if (!ts) return '-';
+      const date  = new Date(ts);
+      const today = new Date();
+      const isToday = date.toDateString() === today.toDateString();
+      if (isToday) {
+        return `今日 ${date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
+      }
+      // 昨日
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      if (date.toDateString() === yesterday.toDateString()) return '昨日';
+      return date.toLocaleDateString('ja-JP');
+    }
+
+    function formatLastLogin(ts) {
+      if (!ts) return '<span style="color:var(--text-muted)">-</span>';
+      const d     = new Date(ts);
+      const today = new Date();
+      const isToday = d.toDateString() === today.toDateString();
+      if (isToday) {
+        return `<span style="color:var(--accent);font-weight:600">${d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}</span>`;
+      }
+      return d.toLocaleDateString('ja-JP');
+    }
 
     function roleBadge(role) {
       return `<span class="role-badge role-${role}">${role}</span>`;
@@ -444,6 +470,7 @@
           <td style="color:var(--text-muted)">${u.email || '-'}</td>
           <td>${roleEl}</td>
           <td style="color:var(--text-muted)">${date}</td>
+          <td style="font-size:13px">${formatLastLogin(u.lastLoginAt)}</td>
           <td style="display:flex;gap:6px;flex-wrap:wrap">${banBtn}${noShareToggle}</td>
         </tr>`;
       });

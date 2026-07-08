@@ -100,6 +100,8 @@
       document.documentElement.setAttribute('data-theme', t);
     })();
   </script>
+  <link rel="icon" type="image/png" href="/icon.png">
+  <link rel="apple-touch-icon" href="/icon.png">
 </head>
 <body>
   <button id="theme-toggle" onclick="window.themeToggle()" title="テーマ切り替え" style="position:fixed;top:16px;right:16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);cursor:pointer;font-size:15px;padding:6px 12px;z-index:999;transition:border-color 0.15s;">🌙</button>
@@ -107,8 +109,8 @@
     <div class="logo">Dasopedia</div>
     <h1>ようこそ</h1>
     <div class="tabs">
-      <button class="tab active" onclick="window.switchTab('login')">ログイン</button>
-      <button class="tab" onclick="window.switchTab('register')">新規登録</button>
+      <button class="tab active" onclick="switchTab('login')">ログイン</button>
+      <button class="tab" onclick="switchTab('register')">新規登録</button>
     </div>
     <div class="form">
       <div class="field" id="field-displayName">
@@ -145,110 +147,120 @@
       </button>
     </div>
   </div>
-<script type="module">
-  import { toggleTheme, updateToggleButton } from 'https://dasopedia.f5.si/js/theme.js';
-  window.themeToggle = toggleTheme;
-  updateToggleButton();
-  import { redirectIfLoggedIn, rtdb } from 'https://dasopedia.f5.si/js/auth.js';
-  import { auth } from 'https://dasopedia.f5.si/js/firebase.js';
-  import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  <script type="module">
+    import { toggleTheme, updateToggleButton } from 'https://dasopedia.f5.si/js/theme.js';
+    window.themeToggle = toggleTheme;
+    updateToggleButton();
+    import { redirectIfLoggedIn, rtdb } from 'https://dasopedia.f5.si/js/auth.js';
+    import { auth } from 'https://dasopedia.f5.si/js/firebase.js';
+    import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { ref, set, get, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-  redirectIfLoggedIn();
+    redirectIfLoggedIn();
 
-  const msgEl = document.getElementById('msg');
-  const btn = document.getElementById('submitBtn');
-  let mode = 'login';
+    // URLパラメータからコード自動入力・registerモード切り替え
+    const urlParams = new URLSearchParams(location.search);
+    const urlCode   = urlParams.get('code');
+    const autoReg   = urlParams.get('register') === '1';
 
-  // switchTabの定義（先に定義する）
-  window.switchTab = function(tab) {
-    mode = tab;
-    document.querySelectorAll('.tab').forEach((t, i) => {
-      t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
-    });
-    document.getElementById('field-displayName').style.display = tab === 'register' ? 'flex' : 'none';
-    document.getElementById('field-inviteCode').style.display = tab === 'register' ? 'flex' : 'none';
-    document.getElementById('field-agree').style.display = tab === 'register' ? 'flex' : 'none';
-    btn.textContent = tab === 'login' ? 'ログイン' : '登録する';
-    msgEl.className = 'message';
-  };
-
-  // URLパラメータの処理（switchTab定義後に実行）
-  const urlParams = new URLSearchParams(location.search);
-  const urlCode = urlParams.get('code');
-  const autoReg = urlParams.get('register') === '1';
-  if (urlCode && autoReg) window.switchTab('register');
-  if (urlCode) document.getElementById('inviteCode').value = urlCode;
-
-  function showMsg(text) { msgEl.textContent = text; msgEl.className = 'message error'; }
-
-  async function ensureUserRecord(user) {
-    const snap = await get(ref(rtdb, `users/${user.uid}`));
-    if (!snap.exists()) {
-      await set(ref(rtdb, `users/${user.uid}`), {
-        displayName: user.displayName || '', email: user.email || '',
-        role: 'viewer', createdAt: Date.now()
-      });
-    }
-  }
-
-  window.doSubmit = async function() {
-    const email       = document.getElementById('email').value.trim();
-    const password    = document.getElementById('password').value;
-    const displayName = document.getElementById('displayName').value.trim();
-    if (!email || !password) { showMsg('メールアドレスとパスワードを入力してください。'); return; }
-    if (mode === 'register' && !displayName) { showMsg('表示名を入力してください。'); return; }
-    btn.disabled = true; btn.textContent = '処理中...';
-    try {
-      if (mode === 'login') {
-        const cred = await signInWithEmailAndPassword(auth, email, password);
-        await ensureUserRecord(cred.user);
-      } else {
-        if (password.length < 8) { showMsg('パスワードは8文字以上にしてください。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
-        if (!document.getElementById('agree-check').checked) {
-          showMsg('利用規約・プライバシーポリシーへの同意が必要です。');
-          btn.disabled = false; btn.textContent = 'アカウントを作成'; return;
-        }
-        const inviteCode = document.getElementById('inviteCode').value.trim();
-        if (!inviteCode) { showMsg('招待コードを入力してください。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
-        const inviteSnap = await get(ref(rtdb, `invites/${inviteCode}`));
-        if (!inviteSnap.exists()) { showMsg('招待コードが無効です。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
-        const invite = inviteSnap.val();
-        if (invite.usedBy) { showMsg('この招待コードは既に使用されています。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
-        if (invite.disabled) { showMsg('この招待コードは無効化されています。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
-        if (invite.expiresAt && Date.now() > invite.expiresAt) { showMsg('招待コードの有効期限が切れています。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
-
-        const cred = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(cred.user, { displayName });
-        await set(ref(rtdb, `users/${cred.user.uid}`), { displayName, email, role: invite.role || 'viewer', createdAt: Date.now(), agreedVersion: '1.0', agreedAt: Date.now() });
-        await set(ref(rtdb, `invites/${inviteCode}/usedBy`), cred.user.uid);
-        await set(ref(rtdb, `invites/${inviteCode}/usedAt`), Date.now());
+    if (urlCode || autoReg) {
+      // 新規登録タブに切り替え
+      window.switchTab('register');
+      if (urlCode) {
+        document.getElementById('inviteCode').value = urlCode;
       }
-      window.location.href = '/';
-    } catch (e) {
-      const msgs = {
-        'auth/invalid-credential': 'メールアドレスまたはパスワードが違います。',
-        'auth/user-not-found': 'アカウントが見つかりません。',
-        'auth/wrong-password': 'パスワードが違います。',
-        'auth/email-already-in-use': 'このメールアドレスは既に使用されています。',
-        'auth/invalid-email': '有効なメールアドレスを入力してください。',
-        'auth/weak-password': 'パスワードが弱すぎます。'
-      };
-      showMsg(msgs[e.code] || `エラー: ${e.message}`);
-      btn.disabled = false; btn.textContent = mode === 'login' ? 'ログイン' : 'アカウントを作成';
     }
-  };
 
-  window.doGoogle = async function() {
-    try {
-      const provider = new GoogleAuthProvider();
-      const cred = await signInWithPopup(auth, provider);
-      await ensureUserRecord(cred.user);
-      window.location.href = '/';
-    } catch (e) {
-      if (e.code !== 'auth/popup-closed-by-user') showMsg(`Googleログインエラー: ${e.message}`);
+    const msgEl = document.getElementById('msg');
+    const btn   = document.getElementById('submitBtn');
+    let mode = 'login';
+
+    window.switchTab = function(tab) {
+      mode = tab;
+      document.querySelectorAll('.tab').forEach((t, i) => {
+        t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
+      });
+      document.getElementById('field-displayName').style.display = tab === 'register' ? 'flex' : 'none';
+      document.getElementById('field-inviteCode').style.display = tab === 'register' ? 'flex' : 'none';
+      document.getElementById('field-agree').style.display = tab === 'register' ? 'flex' : 'none';
+      btn.textContent = tab === 'login' ? 'ログイン' : 'アカウントを作成';
+      msgEl.className = 'message';
+    };
+
+    function showMsg(text) { msgEl.textContent = text; msgEl.className = 'message error'; }
+
+    async function ensureUserRecord(user) {
+      const snap = await get(ref(rtdb, `users/${user.uid}`));
+      if (!snap.exists()) {
+        await set(ref(rtdb, `users/${user.uid}`), {
+          displayName: user.displayName || '', email: user.email || '',
+          role: 'viewer', createdAt: Date.now()
+        });
+      }
     }
-  };
-</script>
+
+    window.doSubmit = async function() {
+      const email       = document.getElementById('email').value.trim();
+      const password    = document.getElementById('password').value;
+      const displayName = document.getElementById('displayName').value.trim();
+      if (!email || !password) { showMsg('メールアドレスとパスワードを入力してください。'); return; }
+      if (mode === 'register' && !displayName) { showMsg('表示名を入力してください。'); return; }
+      btn.disabled = true; btn.textContent = '処理中...';
+      try {
+        if (mode === 'login') {
+          const cred = await signInWithEmailAndPassword(auth, email, password);
+          await ensureUserRecord(cred.user);
+          await update(ref(rtdb, `users/${cred.user.uid}`), { lastLoginAt: Date.now() });
+        } else {
+          if (password.length < 8) { showMsg('パスワードは8文字以上にしてください。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
+          // 同意チェック
+          if (!document.getElementById('agree-check').checked) {
+            showMsg('利用規約・プライバシーポリシーへの同意が必要です。');
+            btn.disabled = false; btn.textContent = 'アカウントを作成'; return;
+          }
+          // 招待コード検証
+          const inviteCode = document.getElementById('inviteCode').value.trim();
+          if (!inviteCode) { showMsg('招待コードを入力してください。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
+          const inviteSnap = await get(ref(rtdb, `invites/${inviteCode}`));
+          if (!inviteSnap.exists()) { showMsg('招待コードが無効です。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
+          const invite = inviteSnap.val();
+          if (invite.usedBy) { showMsg('この招待コードは既に使用されています。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
+          if (invite.disabled) { showMsg('この招待コードは無効化されています。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
+          if (invite.expiresAt && Date.now() > invite.expiresAt) { showMsg('招待コードの有効期限が切れています。'); btn.disabled = false; btn.textContent = 'アカウントを作成'; return; }
+
+          const cred = await createUserWithEmailAndPassword(auth, email, password);
+          await updateProfile(cred.user, { displayName });
+          await set(ref(rtdb, `users/${cred.user.uid}`), { displayName, email, role: invite.role || 'viewer', createdAt: Date.now(), agreedVersion: '1.0', agreedAt: Date.now() });
+          // 招待コードを使用済みにする
+          await set(ref(rtdb, `invites/${inviteCode}/usedBy`), cred.user.uid);
+          await set(ref(rtdb, `invites/${inviteCode}/usedAt`), Date.now());
+        }
+        window.location.href = '/';
+      } catch (e) {
+        const msgs = {
+          'auth/invalid-credential': 'メールアドレスまたはパスワードが違います。',
+          'auth/user-not-found': 'アカウントが見つかりません。',
+          'auth/wrong-password': 'パスワードが違います。',
+          'auth/email-already-in-use': 'このメールアドレスは既に使用されています。',
+          'auth/invalid-email': '有効なメールアドレスを入力してください。',
+          'auth/weak-password': 'パスワードが弱すぎます。'
+        };
+        showMsg(msgs[e.code] || `エラー: ${e.message}`);
+        btn.disabled = false; btn.textContent = mode === 'login' ? 'ログイン' : 'アカウントを作成';
+      }
+    };
+
+    window.doGoogle = async function() {
+      try {
+        const provider = new GoogleAuthProvider();
+        const cred = await signInWithPopup(auth, provider);
+        await ensureUserRecord(cred.user);
+        await update(ref(rtdb, `users/${cred.user.uid}`), { lastLoginAt: Date.now() });
+        window.location.href = '/';
+      } catch (e) {
+        if (e.code !== 'auth/popup-closed-by-user') showMsg(`Googleログインエラー: ${e.message}`);
+      }
+    };
+  </script>
 </body>
 </html>

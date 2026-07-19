@@ -11,7 +11,23 @@
   {
     "imports": {
       "@tiptap/core": "https://esm.sh/@tiptap/core@2.11.5",
-      "@tiptap/starter-kit": "https://esm.sh/@tiptap/starter-kit@2.11.5?external=@tiptap/core",
+      "@tiptap/extension-document": "https://esm.sh/@tiptap/extension-document@2.11.5?external=@tiptap/core",
+      "@tiptap/extension-paragraph": "https://esm.sh/@tiptap/extension-paragraph@2.11.5?external=@tiptap/core",
+      "@tiptap/extension-text": "https://esm.sh/@tiptap/extension-text@2.11.5?external=@tiptap/core",
+      "@tiptap/extension-bold": "https://esm.sh/@tiptap/extension-bold@2.11.5?external=@tiptap/core",
+      "@tiptap/extension-italic": "https://esm.sh/@tiptap/extension-italic@2.11.5?external=@tiptap/core",
+      "@tiptap/extension-strike": "https://esm.sh/@tiptap/extension-strike@2.11.5?external=@tiptap/core",
+      "@tiptap/extension-code": "https://esm.sh/@tiptap/extension-code@2.11.5?external=@tiptap/core",
+      "@tiptap/extension-code-block": "https://esm.sh/@tiptap/extension-code-block@2.11.5?external=@tiptap/core",
+      "@tiptap/extension-heading": "https://esm.sh/@tiptap/extension-heading@2.11.5?external=@tiptap/core",
+      "@tiptap/extension-bullet-list": "https://esm.sh/@tiptap/extension-bullet-list@2.11.5?external=@tiptap/core",
+      "@tiptap/extension-ordered-list": "https://esm.sh/@tiptap/extension-ordered-list@2.11.5?external=@tiptap/core",
+      "@tiptap/extension-list-item": "https://esm.sh/@tiptap/extension-list-item@2.11.5?external=@tiptap/core",
+      "@tiptap/extension-blockquote": "https://esm.sh/@tiptap/extension-blockquote@2.11.5?external=@tiptap/core",
+      "@tiptap/extension-hard-break": "https://esm.sh/@tiptap/extension-hard-break@2.11.5?external=@tiptap/core",
+      "@tiptap/extension-history": "https://esm.sh/@tiptap/extension-history@2.11.5?external=@tiptap/core",
+      "@tiptap/extension-dropcursor": "https://esm.sh/@tiptap/extension-dropcursor@2.11.5?external=@tiptap/core",
+      "@tiptap/extension-gapcursor": "https://esm.sh/@tiptap/extension-gapcursor@2.11.5?external=@tiptap/core",
       "@tiptap/extension-link": "https://esm.sh/@tiptap/extension-link@2.11.5?external=@tiptap/core",
       "@tiptap/extension-placeholder": "https://esm.sh/@tiptap/extension-placeholder@2.11.5?external=@tiptap/core"
     }
@@ -821,17 +837,40 @@
 
     // ===== TipTap初期化 =====
     async function initTiptap(initialJson) {
-      const [{ Editor }, StarterKit, Link, Placeholder] = await Promise.all([
+      const mods = await Promise.all([
         import('@tiptap/core'),
-        import('@tiptap/starter-kit').then(m => m.default),
+        import('@tiptap/extension-document').then(m => m.default),
+        import('@tiptap/extension-paragraph').then(m => m.default),
+        import('@tiptap/extension-text').then(m => m.default),
+        import('@tiptap/extension-bold').then(m => m.default),
+        import('@tiptap/extension-italic').then(m => m.default),
+        import('@tiptap/extension-strike').then(m => m.default),
+        import('@tiptap/extension-code').then(m => m.default),
+        import('@tiptap/extension-code-block').then(m => m.default),
+        import('@tiptap/extension-heading').then(m => m.default),
+        import('@tiptap/extension-bullet-list').then(m => m.default),
+        import('@tiptap/extension-ordered-list').then(m => m.default),
+        import('@tiptap/extension-list-item').then(m => m.default),
+        import('@tiptap/extension-blockquote').then(m => m.default),
+        import('@tiptap/extension-hard-break').then(m => m.default),
+        import('@tiptap/extension-history').then(m => m.default),
+        import('@tiptap/extension-dropcursor').then(m => m.default),
+        import('@tiptap/extension-gapcursor').then(m => m.default),
         import('@tiptap/extension-link').then(m => m.default),
         import('@tiptap/extension-placeholder').then(m => m.default),
       ]);
+      const [
+        { Editor }, DocumentExt, Paragraph, Text, Bold, Italic, Strike, Code, CodeBlock,
+        Heading, BulletList, OrderedList, ListItem, Blockquote, HardBreak, History,
+        Dropcursor, Gapcursor, Link, Placeholder,
+      ] = mods;
 
       ttEditor = new Editor({
         element: document.getElementById('tiptap-editor'),
         extensions: [
-          StarterKit,
+          DocumentExt, Paragraph, Text, Bold, Italic, Strike, Code, CodeBlock,
+          Heading, BulletList, OrderedList, ListItem, Blockquote, HardBreak, History,
+          Dropcursor, Gapcursor,
           Link.configure({ openOnClick: false }),
           Placeholder.configure({ placeholder: 'ここに記事を書く...' }),
         ],

@@ -810,10 +810,10 @@
     // ===== TipTap初期化 =====
     async function initTiptap(initialJson) {
       const [{ Editor }, StarterKit, Link, Placeholder] = await Promise.all([
-        import('https://esm.sh/@tiptap/core@2.11.5'),
-        import('https://esm.sh/@tiptap/starter-kit@2.11.5').then(m => m.default),
-        import('https://esm.sh/@tiptap/extension-link@2.11.5').then(m => m.default),
-        import('https://esm.sh/@tiptap/extension-placeholder@2.11.5').then(m => m.default),
+        import('https://cdn.jsdelivr.net/npm/@tiptap/core@2.11.5/+esm'),
+        import('https://cdn.jsdelivr.net/npm/@tiptap/starter-kit@2.11.5/+esm').then(m => m.default),
+        import('https://cdn.jsdelivr.net/npm/@tiptap/extension-link@2.11.5/+esm').then(m => m.default),
+        import('https://cdn.jsdelivr.net/npm/@tiptap/extension-placeholder@2.11.5/+esm').then(m => m.default),
       ]);
 
       ttEditor = new Editor({

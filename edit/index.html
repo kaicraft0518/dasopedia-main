@@ -6,6 +6,18 @@
   <title>記事を編集 — Dasopedia</title>
   <script>(function(){ document.documentElement.setAttribute('data-theme', localStorage.getItem('dasopedia-theme') || 'light'); })();</script>
 
+  <!-- importmap: TipTapパッケージ間で@tiptap/coreの単一インスタンスを共有するため -->
+  <script type="importmap">
+  {
+    "imports": {
+      "@tiptap/core": "https://esm.sh/@tiptap/core@2.11.5",
+      "@tiptap/starter-kit": "https://esm.sh/@tiptap/starter-kit@2.11.5?external=@tiptap/core",
+      "@tiptap/extension-link": "https://esm.sh/@tiptap/extension-link@2.11.5?external=@tiptap/core",
+      "@tiptap/extension-placeholder": "https://esm.sh/@tiptap/extension-placeholder@2.11.5?external=@tiptap/core"
+    }
+  }
+  </script>
+
   <!-- CodeMirror 6 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js"></script>
 
@@ -810,10 +822,10 @@
     // ===== TipTap初期化 =====
     async function initTiptap(initialJson) {
       const [{ Editor }, StarterKit, Link, Placeholder] = await Promise.all([
-        import('https://esm.sh/@tiptap/core@2.11.5'),
-        import('https://esm.sh/@tiptap/starter-kit@2.11.5?external=@tiptap/core').then(m => m.default),
-        import('https://esm.sh/@tiptap/extension-link@2.11.5?external=@tiptap/core').then(m => m.default),
-        import('https://esm.sh/@tiptap/extension-placeholder@2.11.5?external=@tiptap/core').then(m => m.default),
+        import('@tiptap/core'),
+        import('@tiptap/starter-kit').then(m => m.default),
+        import('@tiptap/extension-link').then(m => m.default),
+        import('@tiptap/extension-placeholder').then(m => m.default),
       ]);
 
       ttEditor = new Editor({

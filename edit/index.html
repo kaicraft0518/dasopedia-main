@@ -73,6 +73,30 @@
     .tb-btn:hover { background: var(--bg); border-color: var(--border); color: var(--text); }
     .tb-sep { width: 1px; height: 18px; background: var(--border); margin: 0 3px; flex-shrink: 0; }
 
+    /* エディタ種別タブ */
+    .editor-type-tabs { display: flex; background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 2px; gap: 2px; flex-shrink: 0; }
+    .et-tab { background: none; border: none; border-radius: 5px; color: var(--text-muted); cursor: pointer; font-family: var(--font); font-size: 12px; font-weight: 600; padding: 5px 12px; transition: all 0.15s; white-space: nowrap; }
+    .et-tab.active { background: var(--accent); color: #fff; }
+
+    /* TipTapエディタ */
+    .tiptap-wrap { display: flex; flex-direction: column; flex: 1; overflow: hidden; min-width: 0; }
+    .tt-toolbar { display: flex; gap: 3px; padding: 6px 10px; border-bottom: 1px solid var(--border); background: var(--surface); flex-wrap: wrap; flex-shrink: 0; }
+    .tt-body { flex: 1; overflow-y: auto; padding: 32px 48px; }
+    .tt-editor { max-width: 720px; margin: 0 auto; outline: none; font-size: 16px; line-height: 1.85; min-height: 100%; }
+    .tt-editor p { margin-bottom: 14px; }
+    .tt-editor p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--text-muted); float: left; height: 0; pointer-events: none; }
+    .tt-editor h1 { font-size: 28px; font-weight: 700; margin: 28px 0 12px; letter-spacing: -0.02em; }
+    .tt-editor h2 { font-size: 22px; font-weight: 700; margin: 24px 0 10px; letter-spacing: -0.02em; }
+    .tt-editor h3 { font-size: 18px; font-weight: 700; margin: 20px 0 8px; }
+    .tt-editor ul, .tt-editor ol { margin: 0 0 14px 24px; }
+    .tt-editor li { margin-bottom: 4px; }
+    .tt-editor code { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-mono); font-size: 14px; padding: 2px 6px; }
+    .tt-editor pre { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin: 14px 0; overflow-x: auto; }
+    .tt-editor pre code { background: none; border: none; padding: 0; }
+    .tt-editor blockquote { border-left: 3px solid var(--accent); padding: 8px 18px; color: var(--text-muted); margin: 14px 0; }
+    .tt-editor a { color: var(--accent); }
+    .tt-editor strong { font-weight: 700; }
+
     /* 色ボタン */
     .tb-color { width: 20px; height: 20px; border-radius: 4px; border: 2px solid transparent; cursor: pointer; transition: transform 0.1s; flex-shrink: 0; }
     .tb-color:hover { transform: scale(1.2); border-color: var(--text-muted); }
@@ -116,32 +140,6 @@
     .toast.show { display: block; }
     .toast.success { border-color: rgba(42,157,111,0.4); color: var(--success); }
     .toast.error { border-color: rgba(214,59,59,0.4); color: var(--error); }
-
-    /* 共同編集モーダル */
-    .collab-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 16px; }
-    .collab-modal-overlay.open { display: flex; }
-    .collab-modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 900px; height: 80vh; display: flex; flex-direction: column; overflow: hidden; }
-    .collab-header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-    .collab-title { font-size: 15px; font-weight: 700; flex: 1; }
-    .collab-status { font-size: 12px; padding: 4px 10px; border-radius: 6px; background: var(--bg); color: var(--text-muted); }
-    .collab-status.connected { background: rgba(42,157,111,0.1); color: var(--success); }
-    .collab-presence { display: flex; gap: 4px; }
-    .collab-avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid var(--surface); margin-left: -8px; }
-    .collab-avatar:first-child { margin-left: 0; }
-    .collab-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 20px; }
-    .collab-body { flex: 1; overflow-y: auto; padding: 24px 28px; }
-    .collab-editor { outline: none; font-size: 15px; line-height: 1.8; min-height: 100%; }
-    .collab-editor p { margin-bottom: 12px; }
-    .collab-editor h1 { font-size: 24px; font-weight: 700; margin: 20px 0 10px; }
-    .collab-editor h2 { font-size: 19px; font-weight: 700; margin: 18px 0 8px; }
-    .collab-editor h3 { font-size: 16px; font-weight: 700; margin: 16px 0 8px; }
-    .collab-editor ul, .collab-editor ol { margin: 0 0 12px 22px; }
-    .collab-editor code { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 2px 5px; font-family: monospace; font-size: 13px; }
-    .collab-editor pre { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin: 10px 0; overflow-x: auto; }
-    .collab-editor blockquote { border-left: 3px solid var(--accent); padding: 6px 14px; color: var(--text-muted); margin: 10px 0; }
-    .collab-toolbar { display: flex; gap: 3px; padding: 8px 16px; border-bottom: 1px solid var(--border); background: var(--bg); flex-wrap: wrap; flex-shrink: 0; }
-    .collab-footer { padding: 12px 20px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-    .collab-cursor-label { position: absolute; font-size: 10px; padding: 1px 5px; border-radius: 3px; color: #fff; white-space: nowrap; pointer-events: none; transform: translateY(-100%); }
 
     /* 共有モーダル */
     .share-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
@@ -203,6 +201,10 @@
     <div class="nav-mode" id="nav-mode">新規作成</div>
     <a class="btn-nav" href="/">ホーム</a>
     <a class="btn-nav" href="/wiki/">キャンセル</a>
+    <div class="editor-type-tabs" id="editor-type-tabs" style="display:none">
+      <button class="et-tab active" id="et-tab-md" onclick="switchEditorType('markdown')">Markdown</button>
+      <button class="et-tab" id="et-tab-tiptap" onclick="switchEditorType('tiptap')">リッチテキスト</button>
+    </div>
     <div class="visibility-toggle" id="visibility-toggle" onclick="toggleVisibility()">
       <div class="toggle-dot"></div>
       <span id="visibility-label">非公開</span>
@@ -214,7 +216,7 @@
   </nav>
 
   <div class="editor-area">
-    <div class="editor-left">
+    <div class="editor-left" id="markdown-editor-wrap">
       <div class="editor-meta">
         <div class="meta-row">
           <input class="meta-input" id="title-input" placeholder="記事タイトル" oninput="autoSlug()">
@@ -278,16 +280,47 @@
         <button class="tb-btn" onclick="openResizeModal()" title="画像サイズ変更">↔</button>
         <button class="tb-btn" onclick="document.getElementById('md-file-input').click()" title=".mdファイルを読み込む">📄 .md</button>
         <input type="file" id="md-file-input" accept=".md,.markdown,text/markdown" style="display:none" onchange="loadMdFile(event)">
-        <div class="tb-sep"></div>
-        <button class="tb-btn" onclick="openCollabModal()" title="複数人でリアルタイム編集" style="color:var(--accent)">🔗 共同編集</button>
       </div>
 
       <textarea class="editor-textarea" id="editor" placeholder="Markdown で記事を書く..." oninput="updatePreview()"></textarea>
     </div>
 
-    <div class="editor-right">
+    <div class="editor-right" id="markdown-preview-wrap">
       <div class="preview-label">プレビュー</div>
       <div class="preview-body" id="preview"></div>
+    </div>
+
+    <!-- TipTap（リッチテキスト）エディタ -->
+    <div class="tiptap-wrap" id="tiptap-editor-wrap" style="display:none">
+      <div class="editor-meta">
+        <div class="meta-row">
+          <input class="meta-input" id="title-input-tt" placeholder="記事タイトル" oninput="autoSlugTiptap()">
+          <input class="meta-input" id="slug-input-tt" placeholder="slug（URLに使用）">
+        </div>
+        <input class="meta-input" id="tags-input-tt" placeholder="タグ（カンマ区切り）　例: JavaScript, Firebase">
+      </div>
+      <div class="tt-toolbar">
+        <button class="tb-btn" onclick="ttCmd('bold')" title="太字"><b>B</b></button>
+        <button class="tb-btn" onclick="ttCmd('italic')" title="斜体"><i>I</i></button>
+        <button class="tb-btn" onclick="ttCmd('strike')" title="取り消し線"><s>S</s></button>
+        <button class="tb-btn" onclick="ttCmd('code')" title="インラインコード">code</button>
+        <div class="tb-sep"></div>
+        <button class="tb-btn" onclick="ttCmd('heading1')" title="見出し1">H1</button>
+        <button class="tb-btn" onclick="ttCmd('heading2')" title="見出し2">H2</button>
+        <button class="tb-btn" onclick="ttCmd('heading3')" title="見出し3">H3</button>
+        <div class="tb-sep"></div>
+        <button class="tb-btn" onclick="ttCmd('bulletList')" title="リスト">リスト</button>
+        <button class="tb-btn" onclick="ttCmd('orderedList')" title="番号リスト">番号</button>
+        <button class="tb-btn" onclick="ttCmd('blockquote')" title="引用">引用</button>
+        <button class="tb-btn" onclick="ttCmd('codeBlock')" title="コードブロック">```</button>
+        <button class="tb-btn" onclick="ttCmd('link')" title="リンク">リンク</button>
+        <div class="tb-sep"></div>
+        <button class="tb-btn" onclick="ttCmd('undo')" title="元に戻す">↺</button>
+        <button class="tb-btn" onclick="ttCmd('redo')" title="やり直し">↻</button>
+      </div>
+      <div class="tt-body" id="tiptap-body">
+        <div class="tt-editor" id="tiptap-editor"></div>
+      </div>
     </div>
   </div>
 
@@ -344,39 +377,6 @@
       </div>
       <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">追加した人はこの記事を編集できます。</div>
       <div id="share-user-list"><div style="color:var(--text-muted);font-size:13px">読み込み中...</div></div>
-    </div>
-  </div>
-
-  <!-- 共同編集モーダル -->
-  <div class="collab-modal-overlay" id="collab-modal-overlay" onclick="if(event.target===this)closeCollabModal()">
-    <div class="collab-modal">
-      <div class="collab-header">
-        <div class="collab-title">🔗 共同編集モード</div>
-        <div class="collab-presence" id="collab-presence"></div>
-        <div class="collab-status" id="collab-status">接続中...</div>
-        <button class="collab-close" onclick="closeCollabModal()">✕</button>
-      </div>
-      <div class="collab-toolbar">
-        <button class="tb-btn" onclick="collabCmd('bold')"><b>B</b></button>
-        <button class="tb-btn" onclick="collabCmd('italic')"><i>I</i></button>
-        <button class="tb-btn" onclick="collabCmd('strike')"><s>S</s></button>
-        <div class="tb-sep"></div>
-        <button class="tb-btn" onclick="collabCmd('heading1')">H1</button>
-        <button class="tb-btn" onclick="collabCmd('heading2')">H2</button>
-        <button class="tb-btn" onclick="collabCmd('heading3')">H3</button>
-        <div class="tb-sep"></div>
-        <button class="tb-btn" onclick="collabCmd('bulletList')">リスト</button>
-        <button class="tb-btn" onclick="collabCmd('orderedList')">番号</button>
-        <button class="tb-btn" onclick="collabCmd('blockquote')">引用</button>
-        <button class="tb-btn" onclick="collabCmd('codeBlock')">```</button>
-      </div>
-      <div class="collab-body">
-        <div class="collab-editor" id="collab-editor"></div>
-      </div>
-      <div class="collab-footer">
-        <span>変更は自動的に全員に同期されます。この記事のMarkdown本文には反映されません。</span>
-        <button class="btn-nav" onclick="exportCollabToMarkdown()">Markdownへ書き出し</button>
-      </div>
     </div>
   </div>
 
@@ -763,25 +763,128 @@
       setTimeout(() => { document.getElementById('autosave-indicator').style.display = 'none'; }, 2000);
     }
 
+    // ===== エディタ種別の切り替え（新規記事のみ） =====
+    let currentEditorType = 'markdown'; // 'markdown' | 'tiptap'
+    let ttEditor = null; // TipTapインスタンス
+
+    window.switchEditorType = async function(type) {
+      if (type === currentEditorType) return;
+      currentEditorType = type;
+      document.getElementById('et-tab-md').classList.toggle('active', type === 'markdown');
+      document.getElementById('et-tab-tiptap').classList.toggle('active', type === 'tiptap');
+      document.getElementById('markdown-editor-wrap').style.display  = type === 'markdown' ? 'flex' : 'none';
+      document.getElementById('markdown-preview-wrap').style.display = type === 'markdown' ? 'flex' : 'none';
+      document.getElementById('tiptap-editor-wrap').style.display    = type === 'tiptap'   ? 'flex' : 'none';
+
+      if (type === 'tiptap' && !ttEditor) {
+        await initTiptap();
+      }
+    };
+
+    // タイトル・スラグ・タグの値をMarkdown/TipTapで同期させる
+    function syncMetaFields(source) {
+      if (source === 'md') {
+        document.getElementById('title-input-tt').value = document.getElementById('title-input').value;
+        document.getElementById('slug-input-tt').value  = document.getElementById('slug-input').value;
+        document.getElementById('tags-input-tt').value  = document.getElementById('tags-input').value;
+      } else {
+        document.getElementById('title-input').value = document.getElementById('title-input-tt').value;
+        document.getElementById('slug-input').value  = document.getElementById('slug-input-tt').value;
+        document.getElementById('tags-input').value  = document.getElementById('tags-input-tt').value;
+      }
+    }
+    document.getElementById('title-input').addEventListener('input', () => syncMetaFields('md'));
+    document.getElementById('slug-input').addEventListener('input', () => syncMetaFields('md'));
+    document.getElementById('tags-input').addEventListener('input', () => syncMetaFields('md'));
+
+    window.autoSlugTiptap = function() {
+      if (articleId) return;
+      const slug = document.getElementById('title-input-tt').value
+        .toLowerCase()
+        .replace(/[^\w\u3040-\u309f\u30a0-\u309f\u4e00-\u9faf\s-]/g, '')
+        .replace(/\s+/g, '-').replace(/-+/g, '-').trim();
+      document.getElementById('slug-input-tt').value = slug;
+      syncMetaFields('tt');
+    };
+
+    // ===== TipTap初期化 =====
+    async function initTiptap(initialJson) {
+      const [{ Editor }, StarterKit, Link, Placeholder] = await Promise.all([
+        import('https://esm.sh/@tiptap/core@2.11.5'),
+        import('https://esm.sh/@tiptap/starter-kit@2.11.5').then(m => m.default),
+        import('https://esm.sh/@tiptap/extension-link@2.11.5').then(m => m.default),
+        import('https://esm.sh/@tiptap/extension-placeholder@2.11.5').then(m => m.default),
+      ]);
+
+      ttEditor = new Editor({
+        element: document.getElementById('tiptap-editor'),
+        extensions: [
+          StarterKit,
+          Link.configure({ openOnClick: false }),
+          Placeholder.configure({ placeholder: 'ここに記事を書く...' }),
+        ],
+        content: initialJson || '',
+        onUpdate: () => { scheduleAutosave(); },
+      });
+    }
+
+    window.ttCmd = function(cmd) {
+      if (!ttEditor) return;
+      const chain = ttEditor.chain().focus();
+      switch (cmd) {
+        case 'bold': chain.toggleBold().run(); break;
+        case 'italic': chain.toggleItalic().run(); break;
+        case 'strike': chain.toggleStrike().run(); break;
+        case 'code': chain.toggleCode().run(); break;
+        case 'heading1': chain.toggleHeading({ level: 1 }).run(); break;
+        case 'heading2': chain.toggleHeading({ level: 2 }).run(); break;
+        case 'heading3': chain.toggleHeading({ level: 3 }).run(); break;
+        case 'bulletList': chain.toggleBulletList().run(); break;
+        case 'orderedList': chain.toggleOrderedList().run(); break;
+        case 'blockquote': chain.toggleBlockquote().run(); break;
+        case 'codeBlock': chain.toggleCodeBlock().run(); break;
+        case 'undo': chain.undo().run(); break;
+        case 'redo': chain.redo().run(); break;
+        case 'link': {
+          const url = prompt('リンク先のURLを入力してください:');
+          if (url) chain.setLink({ href: url }).run();
+          break;
+        }
+      }
+    };
+
     // ===== 保存 =====
     window.doSave = async function() {
-      const title   = document.getElementById('title-input').value.trim();
-      const slug    = document.getElementById('slug-input').value.trim();
-      const content = getTA().value;
-      const tags    = document.getElementById('tags-input').value.split(',').map(t => t.trim()).filter(Boolean);
-      if (!title)  { showToast('タイトルを入力してください。', 'error'); return; }
-      if (!slug)   { showToast('スラグを入力してください。', 'error'); return; }
-      if (!content.trim()) { showToast('本文を入力してください。', 'error'); return; }
+      const isTiptap = currentEditorType === 'tiptap';
+      const title = document.getElementById(isTiptap ? 'title-input-tt' : 'title-input').value.trim();
+      const slug  = document.getElementById(isTiptap ? 'slug-input-tt'  : 'slug-input').value.trim();
+      const tags  = document.getElementById(isTiptap ? 'tags-input-tt' : 'tags-input').value.split(',').map(t => t.trim()).filter(Boolean);
+
+      if (!title) { showToast('タイトルを入力してください。', 'error'); return; }
+      if (!slug)  { showToast('スラグを入力してください。', 'error'); return; }
+
+      let payload;
+      if (isTiptap) {
+        if (!ttEditor || ttEditor.isEmpty) { showToast('本文を入力してください。', 'error'); return; }
+        const json = ttEditor.getJSON();
+        const contentText = ttEditor.getText().trim();
+        payload = { editorType: 'tiptap', contentJson: json, contentText, content: '' };
+      } else {
+        const content = getTA().value;
+        if (!content.trim()) { showToast('本文を入力してください。', 'error'); return; }
+        const contentText = content.replace(/[#*`_~\[\]()>!{}]/g, '').replace(/\s+/g, ' ').trim();
+        payload = { editorType: 'markdown', content, contentText };
+      }
+
       const btn = document.getElementById('saveBtn');
       btn.disabled = true; btn.textContent = '保存中...';
-      const contentText = content.replace(/[#*`_~\[\]()>!{}]/g, '').replace(/\s+/g, ' ').trim();
       try {
         if (articleId) {
-          await updateDoc(doc(db, 'articles', articleId), { title, slug, content, contentText, tags, isPublic, editors, updatedAt: serverTimestamp() });
+          await updateDoc(doc(db, 'articles', articleId), { title, slug, tags, isPublic, editors, ...payload, updatedAt: serverTimestamp() });
           showToast('保存しました！');
         } else {
           await addDoc(collection(db, 'articles'), {
-            title, slug, content, contentText, tags, isPublic, editors,
+            title, slug, tags, isPublic, editors, ...payload,
             createdBy: currentUser.uid,
             createdByName: currentUserData.displayName || currentUser.displayName || '',
             createdAt: serverTimestamp(), updatedAt: serverTimestamp()
@@ -796,150 +899,6 @@
     // Cmd/Ctrl+S で保存
     document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); doSave(); } });
 
-    // ===== 共同編集（Yjs + TipTap + Ably） =====
-    let collabState = null; // { editor, provider }
-    let ablyConfigCache = null;
-
-    async function loadAblyConfig() {
-      if (ablyConfigCache) return ablyConfigCache;
-      const snap = await get(ref(rtdb, 'config/ably'));
-      if (!snap.exists()) throw new Error('Ably設定が見つかりません。RTDBのconfig/ablyを確認してください。');
-      ablyConfigCache = snap.val();
-      return ablyConfigCache;
-    }
-
-    function collabPresenceColor(uid) {
-      let hash = 0;
-      for (let i = 0; i < uid.length; i++) hash = uid.charCodeAt(i) + ((hash << 5) - hash);
-      const hue = Math.abs(hash) % 360;
-      return `hsl(${hue}, 65%, 55%)`;
-    }
-
-    function renderCollabPresence(users) {
-      const el = document.getElementById('collab-presence');
-      el.innerHTML = users.map(u => {
-        const initial = (u.displayName || '?').charAt(0).toUpperCase();
-        const color = collabPresenceColor(u.uid || u.displayName || 'x');
-        return `<div class="collab-avatar" style="background:${color}" title="${u.displayName || '匿名'}">${initial}</div>`;
-      }).join('');
-    }
-
-    window.openCollabModal = async function() {
-      if (!articleId) {
-        showToast('共同編集は保存済みの記事でのみ使用できます。まず保存してください。', 'error');
-        return;
-      }
-      document.getElementById('collab-modal-overlay').classList.add('open');
-      document.getElementById('collab-status').textContent = '接続中...';
-      document.getElementById('collab-status').className = 'collab-status';
-
-      try {
-        const cfg = await loadAblyConfig();
-
-        // 動的import（TipTap + Yjs + Ably）
-        const [
-          { Editor },
-          StarterKit,
-          Collaboration,
-          CollaborationCursor,
-          { createCollabProvider },
-        ] = await Promise.all([
-          import('https://esm.sh/@tiptap/core@2?bundle'),
-          import('https://esm.sh/@tiptap/starter-kit@2?bundle').then(m => m.default),
-          import('https://esm.sh/@tiptap/extension-collaboration@2?bundle').then(m => m.default),
-          import('https://esm.sh/@tiptap/extension-collaboration-cursor@2?bundle').then(m => m.default),
-          import('https://dasopedia.f5.si/js/collab.js'),
-        ]);
-
-        const provider = await createCollabProvider(articleId, cfg.apiKey, (users) => {
-          renderCollabPresence(users);
-        });
-        collabState = { provider };
-
-        const myColor = collabPresenceColor(currentUser.uid);
-
-        const editor = new Editor({
-          element: document.getElementById('collab-editor'),
-          extensions: [
-            StarterKit.configure({ history: false }), // 履歴はYjsに任せる
-            Collaboration.configure({ document: provider.ydoc }),
-            CollaborationCursor.configure({
-              provider: { awareness: null }, // Ablyベースなので独自プレゼンスを使用（カーソル同期は簡易版）
-              user: {
-                name: currentUserData.displayName || currentUser.displayName || '匿名',
-                color: myColor,
-              },
-            }),
-          ],
-        });
-        collabState.editor = editor;
-
-        await provider.enterPresence(currentUser.uid, currentUserData.displayName || currentUser.displayName || '匿名');
-
-        document.getElementById('collab-status').textContent = '接続済み ● リアルタイム同期中';
-        document.getElementById('collab-status').className = 'collab-status connected';
-
-      } catch (e) {
-        console.error(e);
-        document.getElementById('collab-status').textContent = `接続失敗: ${e.message}`;
-        showToast(`共同編集の開始に失敗しました: ${e.message}`, 'error');
-      }
-    };
-
-    window.closeCollabModal = async function() {
-      document.getElementById('collab-modal-overlay').classList.remove('open');
-      if (collabState) {
-        try {
-          await collabState.provider.leavePresence();
-          collabState.editor.destroy();
-          collabState.provider.destroy();
-        } catch (e) {}
-        collabState = null;
-      }
-    };
-
-    window.collabCmd = function(cmd) {
-      if (!collabState) return;
-      const chain = collabState.editor.chain().focus();
-      switch (cmd) {
-        case 'bold': chain.toggleBold().run(); break;
-        case 'italic': chain.toggleItalic().run(); break;
-        case 'strike': chain.toggleStrike().run(); break;
-        case 'heading1': chain.toggleHeading({ level: 1 }).run(); break;
-        case 'heading2': chain.toggleHeading({ level: 2 }).run(); break;
-        case 'heading3': chain.toggleHeading({ level: 3 }).run(); break;
-        case 'bulletList': chain.toggleBulletList().run(); break;
-        case 'orderedList': chain.toggleOrderedList().run(); break;
-        case 'blockquote': chain.toggleBlockquote().run(); break;
-        case 'codeBlock': chain.toggleCodeBlock().run(); break;
-      }
-    };
-
-    // TipTapのHTML出力をMarkdownっぽいテキストに変換してエディタへ書き出す（簡易変換）
-    window.exportCollabToMarkdown = function() {
-      if (!collabState) return;
-      const html = collabState.editor.getHTML();
-      // 簡易的なHTML→Markdown変換
-      let md = html
-        .replace(/<h1>(.*?)<\/h1>/g, '# $1\n\n')
-        .replace(/<h2>(.*?)<\/h2>/g, '## $1\n\n')
-        .replace(/<h3>(.*?)<\/h3>/g, '### $1\n\n')
-        .replace(/<strong>(.*?)<\/strong>/g, '**$1**')
-        .replace(/<em>(.*?)<\/em>/g, '*$1*')
-        .replace(/<s>(.*?)<\/s>/g, '~~$1~~')
-        .replace(/<code>(.*?)<\/code>/g, '`$1`')
-        .replace(/<blockquote><p>(.*?)<\/p><\/blockquote>/g, '> $1\n\n')
-        .replace(/<li>(.*?)<\/li>/g, '- $1\n')
-        .replace(/<\/?ul>|<\/?ol>/g, '')
-        .replace(/<p>(.*?)<\/p>/g, '$1\n\n')
-        .replace(/<[^>]+>/g, '');
-      const ta = getTA();
-      ta.value = md.trim();
-      updatePreview();
-      closeCollabModal();
-      showToast('共同編集の内容をMarkdownエディタに書き出しました。保存を忘れずに！');
-    };
-
     // ===== 初期化 =====
     requireEditor(async (user, userData) => {
       currentUser = user; currentUserData = userData;
@@ -947,22 +906,41 @@
         const snap = await get(ref(rtdb, 'users'));
         if (snap.exists()) allUsers = snap.val();
       } catch(e) {}
+
       if (articleId) {
+        // 既存記事：editorTypeに応じて対応するエディタのみ表示（タブは隠す＝混在防止）
         document.getElementById('share-btn').style.display = 'block';
         try {
           const snap = await getDoc(doc(db, 'articles', articleId));
           if (snap.exists()) {
             const d = snap.data();
-            document.getElementById('title-input').value = d.title || '';
-            document.getElementById('slug-input').value  = d.slug  || '';
-            document.getElementById('tags-input').value  = (d.tags || []).join(', ');
-            getTA().value = d.content || '';
             isPublic = d.isPublic || false;
             editors  = d.editors  || [];
             syncVisibilityUI();
-            updatePreview();
+
+            const type = d.editorType || 'markdown'; // 未設定＝旧記事はMarkdown扱い
+            currentEditorType = type;
+
+            if (type === 'tiptap') {
+              document.getElementById('title-input-tt').value = d.title || '';
+              document.getElementById('slug-input-tt').value  = d.slug  || '';
+              document.getElementById('tags-input-tt').value  = (d.tags || []).join(', ');
+              document.getElementById('markdown-editor-wrap').style.display  = 'none';
+              document.getElementById('markdown-preview-wrap').style.display = 'none';
+              document.getElementById('tiptap-editor-wrap').style.display    = 'flex';
+              await initTiptap(d.contentJson || '');
+            } else {
+              document.getElementById('title-input').value = d.title || '';
+              document.getElementById('slug-input').value  = d.slug  || '';
+              document.getElementById('tags-input').value  = (d.tags || []).join(', ');
+              getTA().value = d.content || '';
+              updatePreview();
+            }
           }
         } catch(e) { showToast('記事の読み込みに失敗しました。', 'error'); }
+      } else {
+        // 新規作成：エディタ種別を選べるようタブを表示
+        document.getElementById('editor-type-tabs').style.display = 'flex';
       }
     });
   </script>
